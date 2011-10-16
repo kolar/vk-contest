@@ -59,14 +59,24 @@
           <div class="left_column">
             <img class="user_photo" src="http://cs9467.vkontakte.ru/u88367863/a_2a1735f7.jpg" />
             <button class="blue_button">Send a Message</button>
-            <button>Remove from Friends</button>
+            <button class="gray_button">Remove from Friends</button>
             <hr />
-            <div class="profile_counter"><a href="#" class="label" onclick="return false;">News</a><span>1 135</span></div>
-            <div class="profile_counter"><a href="#" class="label" onclick="return false;">Photos</a><span>135</span></div>
-            <div class="profile_counter"><a href="#" class="label" onclick="return false;">Videos</a><span>14</span></div>
-            <div class="profile_counter"><a href="#" class="label" onclick="return false;">Audio files</a><span>145</span></div>
+            <div class="profile_counter">
+              <div class="counter_bg"><a href="#" class="label" onclick="return false;">News</a><span>1 135</span></div>
+            </div>
+            <div class="profile_counter">
+              <div class="counter_bg"><a href="#" class="label" onclick="return false;">Photos</a><span>135</span></div>
+            </div>
+            <div class="profile_counter">
+              <div class="counter_bg"><a href="#" class="label" onclick="return false;">Videos</a><span>14</span></div>
+            </div>
+            <div class="profile_counter">
+              <div class="counter_bg"><a href="#" class="label" onclick="return false;">Audio files</a><span>145</span></div>
+            </div>
             <hr />
-            <div class="profile_counter"><a href="#" class="label" onclick="return false;">Friends</a><span>745</span></div>
+            <div class="profile_counter">
+              <div class="counter_bg"><a href="#" class="label" onclick="return false;">Friends</a><span>745</span></div>
+            </div>
             <div class="users_tiles">
               <div class="user_tile">
                 <a href="#" onclick="return false;"><img src="http://cs769.vkontakte.ru/u6401399/e_aeb9c998.jpg" /></a>
@@ -94,7 +104,9 @@
               </div>
               <div class="clear"></div>
             </div>
-            <div class="profile_counter"><a href="#" class="label" onclick="return false;">Followers</a><span>1 125</span></div>
+            <div class="profile_counter">
+              <div class="counter_bg"><a href="#" class="label" onclick="return false;">Followers</a><span>1 125</span></div>
+            </div>
             <div class="users_tiles">
               <div class="user_tile">
                 <a href="#" onclick="return false;"><img src="http://cs769.vkontakte.ru/u6401399/e_aeb9c998.jpg" /></a>
@@ -112,108 +124,110 @@
             </div>
           </div>
           <div class="right_column">
-            <h1>Anna Vishnevskaya</h1>
-            <div class="user_status">Dog Knows.</div>
-            <dl>
-              <dt>Birthday:</dt>
-              <dd><a href="#" onclick="return false;">March 15</a>, <a href="#" onclick="return false;">1988</a></dd>
-              <dt>Relationship status:</dt>
-              <dd><a href="#" onclick="return false;">Single</a></dd>
-            </dl>
-            <div class="show_more"><a href="#" onclick="return false;">Show more about Anna</a></div>
-            <div class="content_header">
-              <a href="#" class="all_link" onclick="return false;">View all Photos</a>
-              <h4>Photos</h4>
-            </div>
-            <div class="photos_tiles">
-              <div class="photo_tile">
-                <a href="#" onclick="return false;"><img src="http://cs10544.vkontakte.ru/u306538/127662024/m_13d3f050.jpg" /></a>
+            <div id="profile_page" class="page_content">
+              <h1>Anna Vishnevskaya</h1>
+              <div class="user_status">Dog Knows.</div>
+              <dl>
+                <dt>Birthday:</dt>
+                <dd><a href="#" onclick="return false;">March 15</a>, <a href="#" onclick="return false;">1988</a></dd>
+                <dt>Relationship status:</dt>
+                <dd><a href="#" onclick="return false;">Single</a></dd>
+              </dl>
+              <div class="show_more"><a href="#" onclick="return false;">Show more about Anna</a></div>
+              <div class="content_header">
+                <a href="#" class="all_link" onclick="return false;">View all Photos</a>
+                <h4>Photos</h4>
               </div>
-              <div class="photo_tile">
-                <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/130542939/m_f6480f8b.jpg" /></a>
-              </div>
-              <div class="photo_tile">
-                <a href="#" onclick="return false;"><img src="http://cs10819.vkontakte.ru/u306538/127662024/m_10415291.jpg" /></a>
-              </div>
-              <div class="photo_tile">
-                <a href="#" onclick="return false;"><img src="http://cs10865.vkontakte.ru/u306538/127662024/m_7eb700a3.jpg" /></a>
-              </div>
-              <div class="clear"></div>
-            </div>
-            <div class="content_header">
-              <div class="post_field"><textarea>Write a public message...</textarea></div>
-            </div>
-            <div class="wall_posts">
-              <div class="wall_post first">
-                <div class="image_column">
-                  <a href="#" onclick="return false;"><img src="http://cs9330.vkontakte.ru/u00197/e_55f49f5e.jpg" /></a>
+              <div class="photos_tiles">
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs10544.vkontakte.ru/u306538/127662024/m_13d3f050.jpg" /></a>
                 </div>
-                <div class="post_column">
-                  <a href="#" class="author" onclick="return false;">Daria Bondarenko</a>
-                  <div class="text">Want a melon, a couple of fried mushrooms, a drink and a few crawfishes. Maybe, a few more. Better wild.</div>
-                  <div class="like_count">12</div>
-                  <div class="links">
-                    <span class="date">today at 0:31 am</span>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/130542939/m_f6480f8b.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs10819.vkontakte.ru/u306538/127662024/m_10415291.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs10865.vkontakte.ru/u306538/127662024/m_7eb700a3.jpg" /></a>
+                </div>
+                <div class="clear"></div>
+              </div>
+              <div class="content_header">
+                <div class="post_field"><textarea>Write a public message...</textarea></div>
+              </div>
+              <div class="wall_posts">
+                <div class="wall_post first">
+                  <div class="image_column">
+                    <a href="#" onclick="return false;"><img src="http://cs9330.vkontakte.ru/u00197/e_55f49f5e.jpg" /></a>
                   </div>
-                  <div class="show_more"><a href="#" onclick="return false;">Show all 14 replies</a></div>
-                  <div class="post_comments">
-                    <div class="post_comment first">
-                      <div class="image_column">
-                        <a href="#" onclick="return false;"><img src="http://cs400.vkontakte.ru/u00021/e_c31e8334.jpg" /></a>
+                  <div class="post_column">
+                    <a href="#" class="author" onclick="return false;">Daria Bondarenko</a>
+                    <div class="text">Want a melon, a couple of fried mushrooms, a drink and a few crawfishes. Maybe, a few more. Better wild.</div>
+                    <div class="like_count">12</div>
+                    <div class="links">
+                      <span class="date">today at 0:31 am</span>
+                    </div>
+                    <div class="show_more"><a href="#" onclick="return false;">Show all 14 replies</a></div>
+                    <div class="post_comments">
+                      <div class="post_comment first">
+                        <div class="image_column">
+                          <a href="#" onclick="return false;"><img src="http://cs400.vkontakte.ru/u00021/e_c31e8334.jpg" /></a>
+                        </div>
+                        <div class="post_column">
+                          <a href="#" class="author" onclick="return false;">Michael Raudonikas</a>
+                          <div class="text">Can of cola, please.</div>
+                          <div class="like_count">4</div>
+                          <div class="links">
+                            <span class="date">today at 0:33 am</span><span class="delim">-</span><a href="#" class="reply_to" onclick="return false;">to Alexandr</a>
+                          </div>
+                        </div>
                       </div>
-                      <div class="post_column">
-                        <a href="#" class="author" onclick="return false;">Michael Raudonikas</a>
-                        <div class="text">Can of cola, please.</div>
-                        <div class="like_count">4</div>
-                        <div class="links">
-                          <span class="date">today at 0:33 am</span><span class="delim">-</span><a href="#" class="reply_to" onclick="return false;">to Alexandr</a>
+                      <div class="post_comment">
+                        <div class="image_column">
+                          <a href="#" onclick="return false;"><img src="http://cs296.vkontakte.ru/u03484/e_c5f2b76a.jpg" /></a>
+                        </div>
+                        <div class="post_column">
+                          <a href="#" class="author" onclick="return false;">Natalia Illarionova</a>
+                          <div class="text">You'll have to share some leaches</div>
+                          <div class="like_count">2</div>
+                          <div class="links">
+                            <span class="date">today at 0:39 am</span><span class="delim">-</span><a href="#" class="reply_to" onclick="return false;">to Michael</a>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="post_comment">
+                        <div class="image_column">
+                          <a href="#" onclick="return false;"><img src="http://cs1495.vkontakte.ru/u00001/e_78d5296d.jpg" /></a>
+                        </div>
+                        <div class="post_column">
+                          <a href="#" class="author" onclick="return false;">Nicolas Harchev</a>
+                          <div class="text">Yak, these creatures are not to be eaten raw.</div>
+                          <div class="links">
+                            <span class="date">today at 1:15 am</span><span class="delim">-</span><a href="#" class="reply_to" onclick="return false;">to Daria</a>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div class="post_comment">
-                      <div class="image_column">
-                        <a href="#" onclick="return false;"><img src="http://cs296.vkontakte.ru/u03484/e_c5f2b76a.jpg" /></a>
-                      </div>
-                      <div class="post_column">
-                        <a href="#" class="author" onclick="return false;">Natalia Illarionova</a>
-                        <div class="text">You'll have to share some leaches</div>
-                        <div class="like_count">2</div>
-                        <div class="links">
-                          <span class="date">today at 0:39 am</span><span class="delim">-</span><a href="#" class="reply_to" onclick="return false;">to Michael</a>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="post_comment">
-                      <div class="image_column">
-                        <a href="#" onclick="return false;"><img src="http://cs1495.vkontakte.ru/u00001/e_78d5296d.jpg" /></a>
-                      </div>
-                      <div class="post_column">
-                        <a href="#" class="author" onclick="return false;">Nicolas Harchev</a>
-                        <div class="text">Yak, these creatures are not to be eaten raw.</div>
-                        <div class="links">
-                          <span class="date">today at 1:15 am</span><span class="delim">-</span><a href="#" class="reply_to" onclick="return false;">to Daria</a>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
-              </div>
-              <div class="wall_post">
-                <div class="image_column">
-                  <a href="#" onclick="return false;"><img src="http://cs9330.vkontakte.ru/u00197/e_55f49f5e.jpg" /></a>
-                </div>
-                <div class="post_column">
-                  <a href="#" class="author" onclick="return false;">Daria Bondarenko</a>
-                  <div class="text">I love you, Roma. Your sun, your smile, your flavours. We are together, and it is good.</div>
-                  <div class="media_tiles">
-                    <div class="media_tile">
-                      <a href="#" onclick="return false;"><img src="http://cs9787.vkontakte.ru/u00197/-7/m_07dc12fe.jpg" /></a>
-                    </div>
-                    <div class="clear"></div>
+                <div class="wall_post">
+                  <div class="image_column">
+                    <a href="#" onclick="return false;"><img src="http://cs9330.vkontakte.ru/u00197/e_55f49f5e.jpg" /></a>
                   </div>
-                  <div class="like_count">12</div>
-                  <div class="links">
-                    <span class="date">today at 0:31 am</span>
+                  <div class="post_column">
+                    <a href="#" class="author" onclick="return false;">Daria Bondarenko</a>
+                    <div class="text">I love you, Roma. Your sun, your smile, your flavours. We are together, and it is good.</div>
+                    <div class="media_tiles">
+                      <div class="media_tile">
+                        <a href="#" onclick="return false;"><img src="http://cs9787.vkontakte.ru/u00197/-7/m_07dc12fe.jpg" /></a>
+                      </div>
+                      <div class="clear"></div>
+                    </div>
+                    <div class="like_count">12</div>
+                    <div class="links">
+                      <span class="date">today at 0:31 am</span>
+                    </div>
                   </div>
                 </div>
               </div>

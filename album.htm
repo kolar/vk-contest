@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>Конкурс для веб-разработчиков</title>
+    
+    <script type="text/javascript"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <link type="text/css" rel="stylesheet" href="style.css">
+    <style>
+      #content .profile_counter.selected .counter_bg {
+        background-color: #dbdee2;
+        box-shadow: inset 0 1px 3px #caced8;
+      }
+      #content .profile_counter.selected a {
+        text-shadow: #e3e7ea 0 1px 0;
+      }
+      #content .profile_counter.selected span {
+        text-shadow: #eceef0 0 1px 0;
+      }
+      .right_column .page_header {
+        border-bottom: 1px solid #e6e6e6;
+        background: -moz-linear-gradient(top, #f7f7f7, #ededed);
+        background: -webkit-gradient(linear, left top, left bottom, from(#f7f7f7), to(#ededed));
+        background: -o-linear-gradient(top, #f7f7f7, #ededed);
+        padding: 21px 20px 20px;
+      }
+      #content .page_header button {
+        width: 140px;
+        text-align: left;
+        padding: 4px 10px;
+      }
+      #content .page_header button span {
+        font-family: arial;
+        margin-right: 9px;
+        font-size: 20px;
+        float: left;
+      }
+      #content .page_header button div {
+        padding: 6px 0;
+      }
+      @-moz-document url-prefix() {
+        #content .page_header button { padding: 3px 10px; }
+        #content .page_header button div { padding: 7px 0; }
+      }
+      .photos_header {
+        font-family: tahoma;
+        font-size: 15px;
+        font-weight: bold;
+        padding: 5px 0 8px;
+        float: right;
+      }
+      .photos_header a {
+        color: #516b8b;
+      }
+      #photos_count_label,
+      #albums_count_label {
+        height: 18px;
+        padding: 1px 14px 3px 13px;
+        float: left;
+        color: #878787;
+        text-shadow: #fafafa 0 1px 0;
+      }
+      #photos_count_label {
+        border-right: 1px solid #d8d8d8;
+        box-shadow: 1px 0 0 #fff;
+      }
+      #albums_count_label {
+        width: 264px;
+      }
+      #album_page {
+        padding: 16px 17px;
+      }
+      #album_page .photo_tile {
+        padding: 10px 9px;
+      }
+      #album_page .photo_tile a {
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  
+  <body>
+    <div id="masks_wrapper" class="off">
+      <div id="mask1" class="contest_mask"></div>
+      <div id="mask2" class="contest_mask"></div>
+      <div id="mask3" class="contest_mask"></div>
+      <div id="masks_pults">
+        <div class="pult">
+          <div class="label">img1:</div>
+          <div class="btn on" onclick="maskOn(1, 'on');" onmouseover="maskOn(1, 'on', true);" onmouseout="maskOff(true);"></div>
+          <div class="btn half" onclick="maskOn(1, 'half');" onmouseover="maskOn(1, 'half', true);" onmouseout="maskOff(true);"></div>
+        </div>
+        <div class="pult">
+          <div class="label">img2:</div>
+          <div class="btn on" onclick="maskOn(2, 'on');" onmouseover="maskOn(2, 'on', true);" onmouseout="maskOff(true);"></div>
+          <div class="btn half" onclick="maskOn(2, 'half');" onmouseover="maskOn(2, 'half', true);" onmouseout="maskOff(true);"></div>
+        </div>
+        <div class="pult">
+          <div class="label">img3:</div>
+          <div class="btn on" onclick="maskOn(3, 'on');" onmouseover="maskOn(3, 'on', true);" onmouseout="maskOff(true);"></div>
+          <div class="btn half" onclick="maskOn(3, 'half');" onmouseover="maskOn(3, 'half', true);" onmouseout="maskOff(true);"></div>
+        </div>
+        <div class="pult">
+          <div class="btn off" onclick="maskOff();"></div>
+          <div class="label">imgs off</div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="container">
+      <div id="background_header"></div>
+      <div id="page_container">
+        <div id="page_header">
+          <div class="left_side">
+            <div class="icon"></div>
+            <div class="title">Anna Vishnevskaya</div>
+          </div>
+          <div class="right_side">
+            <div class="top_search">
+              <input type="text" value="Search..." />
+            </div>
+            <ul class="top_links">
+              <li><a href="#" onclick="return false;">Newsfeed</a></li>
+              <li><a href="#" onclick="return false;">Feedback</a></li>
+              <li><a href="#" onclick="return false;">Messages</a></li>
+            </ul>
+          </div>
+        </div>
+        <div id="content">
+          <div class="left_column">
+            <img class="user_photo" src="http://cs9467.vkontakte.ru/u88367863/a_2a1735f7.jpg" />
+            <button class="blue_button">Send a Message</button>
+            <button class="gray_button">Remove from Friends</button>
+            <hr />
+            <div class="profile_counter">
+              <div class="counter_bg"><a href="#" class="label" onclick="return false;">News</a><span>1 135</span></div>
+            </div>
+            <div class="profile_counter selected">
+              <div class="counter_bg"><a href="#" class="label" onclick="return false;">Photos</a><span>135</span></div>
+            </div>
+            <div class="profile_counter">
+              <div class="counter_bg"><a href="#" class="label" onclick="return false;">Videos</a><span>14</span></div>
+            </div>
+            <div class="profile_counter">
+              <div class="counter_bg"><a href="#" class="label" onclick="return false;">Audio files</a><span>145</span></div>
+            </div>
+          </div>
+          <div class="right_column">
+            <div class="page_header">
+              <div class="photos_header">
+                <span id="photos_count_label">135 photos</span>
+                <span id="albums_count_label"><a href="#" onclick="return false;">2 albums</a></span>
+              </div>
+              <button><span>&lsaquo;</span><div>Back to Profile</div></button>
+            </div>
+            <div id="album_page" class="page_content">
+              <div class="photos_tiles">
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_f3d47a7c.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_801a9f48.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_6a8a4e48.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_7ec83001.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_23c178d2.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_b2fafc42.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_8ccdf772.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_cbc66c48.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_f3d47a7c.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_e4f9fcb6.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_65bcb437.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11134.vkontakte.ru/u306538/127662024/m_ecc0673a.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11296.vkontakte.ru/u306538/130542939/m_4a519d4c.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11296.vkontakte.ru/u306538/130542939/m_2b3b59d7.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11296.vkontakte.ru/u306538/130542939/m_7300d9ac.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs11296.vkontakte.ru/u306538/130542939/m_50d2cad9.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs10523.vkontakte.ru/u306538/130542939/m_856d136e.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs10523.vkontakte.ru/u306538/130542939/m_dea9db44.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs10523.vkontakte.ru/u306538/130542939/m_64756391.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs10523.vkontakte.ru/u306538/130542939/m_ec7276f3.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs10523.vkontakte.ru/u306538/130542939/m_20f6fe6e.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs10523.vkontakte.ru/u306538/130542939/m_29a492a8.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs10523.vkontakte.ru/u306538/130542939/m_3eb7af71.jpg" /></a>
+                </div>
+                <div class="photo_tile">
+                  <a href="#" onclick="return false;"><img src="http://cs10523.vkontakte.ru/u306538/130542939/m_2bc9428c.jpg" /></a>
+                </div>
+                <div class="clear"></div>
+              </div>
+            </div>
+          </div>
+          <div class="clear"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
