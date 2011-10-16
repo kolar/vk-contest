@@ -5,7 +5,6 @@
 .contest_mask {
   opacity: 0;
   margin: 0 150px;
-  height: 1000px;
 }
 #masks_wrapper, .contest_mask {
   position: absolute;
@@ -65,12 +64,15 @@
 }
 #mask1 {
   background: url(profile.png) no-repeat center top;
+  height: 962px;
 }
 #mask2 {
   background: url(album.png) no-repeat center top;
+  height: 816px;
 }
 #mask3 {
   background: url(photo.png) no-repeat center top;
+  height: 828px;
 }
 #mask1, #mask2, #mask3 {
 /**/    background-position: 146px top;
@@ -100,6 +102,22 @@ a:hover {
 .clear {
   clear: both;
   float: none;
+}
+.noscroll {
+  overflow: hidden;
+}
+.clearfix:after {
+  content: '.';
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
+}
+* html .clearfix {
+  height: 1%;
+}
+.clearfix {
+  display: block;
 }
 
 #container {
@@ -205,7 +223,7 @@ a:hover {
   border-left: 1px solid #dadada;
   background-color: #fff;
   float: right;
-  border-radius: 0 0 10px 0;
+  border-radius: 0 0 10px 10px;
 /*    height: 1000px;*/
 }
 .right_column .page_content {
