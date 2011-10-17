@@ -36,6 +36,22 @@
       #photo_close.photo_nav {
         right: 0;
       }
+      #photo_view_layout .photo_nav div {
+        width: 17px;
+        height: 17px;
+        opacity: 0.48;
+        background: url(photonav.gif) no-repeat;
+        position: fixed;
+        margin: 47px 47px 0 30px;
+      }
+      #photo_left.photo_nav div {
+        background-position: 0 0;
+        left: 0;
+      }
+      #photo_close.photo_nav div {
+        background-position: 0 -19px;
+        right: 0;
+      }
       #photo_container {
         position: relative;
 /*    display: inline-block;*/
@@ -103,8 +119,8 @@
     <div id="photo_bg"></div>
     <div id="photo_view_layout">
       <div id="photo_view_container">
-        <div id="photo_left" class="photo_nav" onclick="console.log('left');"></div>
-        <div id="photo_close" class="photo_nav" onclick="console.log('close');"></div>
+        <div id="photo_left" class="photo_nav" onclick="console.log('left');"><div></div></div>
+        <div id="photo_close" class="photo_nav" onclick="console.log('close');"><div></div></div>
         <div id="photo_container">
           <div class="photo_box">
             <img src="http://digitaljournalist.org/issue0712/images/walker/062b.jpg" />
@@ -118,6 +134,7 @@
           </div>
         </div>
       </div>
+      <div><!-- Opera margin-bottom fix --></div>
     </div>
     <div id="container">
       <div id="background_header"></div>
