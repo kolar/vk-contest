@@ -6,77 +6,6 @@
     <script type="text/javascript"></script>
     <script type="text/javascript" src="main.js"></script>
     <link type="text/css" rel="stylesheet" href="style.css">
-    <style>
-      #content .profile_counter.selected .counter_bg {
-        background-color: #dbdee2;
-        box-shadow: inset 0 1px 3px #caced8;
-      }
-      #content .profile_counter.selected a {
-        text-shadow: #e3e7ea 0 1px 0;
-      }
-      #content .profile_counter.selected span {
-        text-shadow: #eceef0 0 1px 0;
-      }
-      .right_column .page_header {
-        border-bottom: 1px solid #e6e6e6;
-        background: -moz-linear-gradient(top, #f7f7f7, #ededed);
-        background: -webkit-gradient(linear, left top, left bottom, from(#f7f7f7), to(#ededed));
-        background: -o-linear-gradient(top, #f7f7f7, #ededed);
-        padding: 21px 20px 20px;
-      }
-      #content .page_header button {
-        width: 140px;
-        text-align: left;
-        padding: 4px 10px;
-      }
-      #content .page_header button span {
-        font-family: arial;
-        margin-right: 9px;
-        font-size: 20px;
-        float: left;
-      }
-      #content .page_header button div {
-        padding: 6px 0;
-      }
-      @-moz-document url-prefix() {
-        #content .page_header button { padding: 3px 10px; }
-        #content .page_header button div { padding: 7px 0; }
-      }
-      .photos_header {
-        font-family: tahoma;
-        font-size: 15px;
-        font-weight: bold;
-        padding: 5px 0 8px;
-        float: right;
-      }
-      .photos_header a {
-        color: #516b8b;
-      }
-      #photos_count_label,
-      #albums_count_label {
-        height: 18px;
-        padding: 1px 14px 3px 13px;
-        float: left;
-        color: #878787;
-        text-shadow: #fafafa 0 1px 0;
-      }
-      #photos_count_label {
-        border-right: 1px solid #d8d8d8;
-        box-shadow: 1px 0 0 #fff;
-      }
-      #albums_count_label {
-        width: 264px;
-      }
-      #album_page {
-        padding: 16px 17px;
-      }
-      #album_page .photo_tile {
-        padding: 10px 9px;
-      }
-      #album_page .photo_tile a {
-        border-radius: 2px;
-      }
-    </style>
   </head>
   
   <body>
@@ -128,7 +57,7 @@
         </div>
         <div id="content">
           <div class="left_column">
-            <img class="user_photo" src="http://cs9467.vkontakte.ru/u88367863/a_2a1735f7.jpg" />
+            <div class="user_photo"><div class="img"><img src="http://cs9467.vkontakte.ru/u88367863/a_2a1735f7.jpg" /></div></div>
             <button class="blue_button">Send a Message</button>
             <button class="gray_button">Remove from Friends</button>
             <hr />
