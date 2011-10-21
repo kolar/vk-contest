@@ -121,6 +121,17 @@ function trim(text) { return (text || '').replace(/^[\s\uFEFF]+|[\s\uFEFF]+$/g, 
 function htsc(str) { return str.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\'/g,'&#39;').replace(/%/g,'&#37;'); }
 function rehtsc(str) { return str.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,'\'').replace(/&#37;/g,'%'); }
 function escapeRE(s) { return s ? s.replace(/([.*+?^${}()|[\]\/\\])/g, '\\$1') : ''; }
+function qs2obj(qs) {
+  if (!qs) return {};
+  var params = {}, params_arr = qs.toString().split('&');
+  for (var i = 0, l = params_arr.length; i < l; i++) {
+    var kv = params_arr[i].split('=');
+    if (kv[0]) {
+      params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
+    }
+  }
+  return params;
+}
 
 function formatCnt(cnt) {
   return intval(cnt).toString().replace(/(\d)(?=(\d\d\d)+(\D|$))/g, '$1 ');
@@ -255,134 +266,180 @@ var VK = (function() {
   };
 })();
 
-var app = {
-  openProfile: function(user) {
-    this.getProfileInfo(user, function(html) {
-      onDOMReady(function() {
-        ge('container').innerHTML = html;
+var app = (function() {
+  var is_history = !!(window.history && history.pushState);
+  function nav(link, no_push) {
+    if (!no_push && !is_history) return true;
+    if (!link) return true;
+    var push = link, path = '', params = {};
+    if (typeof link !== 'string') {
+      if (!link.pathname) return false;
+      path = link.pathname;
+      params = qs2obj(link.search.substr(1));
+      push = link.pathname + link.search;
+    } else {
+      var pp = link.split('?');
+      path = pp.shift();
+      params = qs2obj(pp.join('?'));
+    }
+    if (!no_push) {
+      try {
+        history.pushState(null, null, push);
+      } catch (e) { return true; }
+    }
+    return processLink(path, params);
+  }
+  function processLink(path, params) {
+    var user = path.substr(1);
+    app.openProfile(user || app.viewer_id);
+    return false;
+  }
+  if (is_history) {
+    window.addEventListener('popstate', function(e) {
+      nav(location, true);
+    }, false);
+  }
+  
+  return {
+    viewer_id: VK.viewer_id,
+    nav: nav,
+    openProfile: function(user) {
+      this.getProfileInfo(user, function(html) {
+        onDOMReady(function() {
+          ge('container').innerHTML = html;
+        });
       });
-    })
-  },
-  getProfileInfo: function(user, callback) {
-    VK.api('execute', {code: tpl.get(tpl.CODE_PROFILE, {user_id: user, need_friends: true})}, function(data) {
-      data = data.response; console.dir(data);
-      var friendsMap = {}; for (var i = 0; i < data.friends_uids.length; i++) { friendsMap[data.friends_uids[i]] = true; };
-      var friends = [], friends_data = (data.friends || []).sort(function() { return Math.random() < 0.5 ? 1 : -1; }).slice(0, 6);
-      for (var i = 0; i < friends_data.length; i++) {
-        friends.push({
-          user_link: '/' + friends_data[i].screen_name,
-          user_photo: friends_data[i].photo,
-          user_firstname: friends_data[i].first_name
-        });
-      }
-      var usersMap = {};
-      for (var i = 0; i < data.profiles.length; i++) {
-        usersMap[data.profiles[i].uid] = data.profiles[i];
-      }
-      for (var i = 0; i < data.posts.profiles.length; i++) {
-        usersMap[data.posts.profiles[i].uid] = data.posts.profiles[i];
-      }
-      var followers = [], followers_users = data.followers.users || [];
-      for (var i = 0; i < followers_users.length; i++) {
-        var user = usersMap[followers_users[i]];
-        followers.push({
-          user_link: '/' + (user.screen_name || 'id' + user.uid),
-          user_photo: user.photo,
-          user_firstname: user.first_name
-        });
-      }
-      var my_profile = VK.viewer_id == data.user.uid,
-          npva = data.user.counters.notes || data.photos[0] || data.user.counters.videos || data.user.counters.audios,
-          ff = data.user.counters.friends || data.followers.count;
-      var bd = (data.user.bdate || '').toString().split('.'), bday = new Date(intval(bd[2]), intval(bd[1])-1, intval(bd[0])),
-          user_birthday = bd.length>1 ? (["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][bday.getMonth()] + ' ' + bday.getDate() + (bd[2] ? ', ' + bday.getFullYear() : '')) : '',
-          user_relation = ["", "Single", "In a Relationship", "Engaged", "Married", "It&#39;s Complicated", "Actively Searching", "In love"][data.user.relation];
-      var photos = [];
-      for (var i = 1; i < data.photos.length; i++) {
-        photos.push({
-          photo_link: '/photo' + data.photos[i].owner_id + '_' + data.photos[i].pid,
-          photo_src: data.photos[i].src
-        });
-      }
-      var posts = [];
-      for (var i = 1; i < data.posts.wall.length; i++) {
-        var post = data.posts.wall[i],
-            cmnts = data.comments[i - 1],
-            from = usersMap[post.from_id],
-            attachments = [],
-            comments = [];
-        if (post.attachments) {
-          for (var j = 0; j < post.attachments.length; j++) {
-            var media = post.attachments[j];
-            if (media.type != 'photo') continue;
-            attachments.push({
-              media_link: '/photo' + media.photo.owner_id + '_' + media.photo.pid,
-              media_src: media.photo.src
-            });
-          }
+    },
+    getProfileInfo: function(user, callback) {
+      VK.api('execute', {code: tpl.get(tpl.CODE_PROFILE, {user_id: user, need_friends: true})}, function(data) {
+        data = data.response; console.dir(data);
+        var friendsMap = {}; for (var i = 0; i < data.friends_uids.length; i++) { friendsMap[data.friends_uids[i]] = true; };
+        var friends = [], friends_data = (data.friends || []).sort(function() { return Math.random() < 0.5 ? 1 : -1; }).slice(0, 6);
+        for (var i = 0; i < friends_data.length; i++) {
+          friends.push({
+            user_link: '/' + friends_data[i].screen_name,
+            user_photo: friends_data[i].photo,
+            user_firstname: friends_data[i].first_name
+          });
         }
-        for (var j = cmnts.length - 1; j > 0; j--) {
-          var comment = cmnts[j],
-              user = usersMap[comment.uid];
-          comments.push(extend({
+        var usersMap = {};
+        for (var i = 0; i < data.profiles.length; i++) {
+          usersMap[data.profiles[i].uid] = data.profiles[i];
+        }
+        for (var i = 0; i < data.posts.profiles.length; i++) {
+          usersMap[data.posts.profiles[i].uid] = data.posts.profiles[i];
+        }
+        var followers = [], followers_users = data.followers.users || [];
+        for (var i = 0; i < followers_users.length; i++) {
+          var user = usersMap[followers_users[i]];
+          followers.push({
             user_link: '/' + (user.screen_name || 'id' + user.uid),
             user_photo: user.photo,
-            user_fullname: user.first_name + ' ' + user.last_name,
-            text: prepareText(makeReplyLink(comment.text, comment.reply_to_uid, comment.reply_to_cid)),
-            post_date: formatDate(comment.date),
-            reply_to_link: comment.reply_to_cid ? '#' + comment.reply_to_cid : '',
-            reply_to_firstname: usersMap[comment.reply_to_uid] && usersMap[comment.reply_to_uid].first_name
-          }, cmnts[0] <= 3 ? {i:1} : {}));
+            user_firstname: user.first_name
+          });
         }
-        posts.push({
-          user_link: '/' + (from.screen_name || 'id' + from.uid),
-          user_photo: from.photo,
-          user_fullname: from.first_name + ' ' + from.last_name,
-          text: prepareText(post.text),
-          likes_count: post.likes.count,
-          post_date: formatDate(post.date),
-          show_attachments: attachments.length,
-          attachments: attachments,
-          show_comments: cmnts[0],
-          show_more_comments: cmnts[0] > 3,
-          show_more_comments_label: 'Show all ' + cmnts[0] + ' comments',
-          comments: comments
-        });
-      }
-      var tpl_data = {
-        my_profile: my_profile,
-        user_firstname: data.user.first_name,
-        user_fullname: data.user.first_name + ' ' + data.user.last_name,
-        profile_photo: data.user.photo_big,
-        can_write_pm: data.user.can_write_private_message && data.user.uid != VK.viewer_id,
-        is_friend: friendsMap[data.user.uid],
-        npva_counters_block: npva && !my_profile,
-        news_cnt: data.news_count && formatCnt(data.news_count),
-        photos_cnt: data.photos[0] && formatCnt(data.photos[0]),
-        videos_cnt: data.user.counters.videos && formatCnt(data.user.counters.videos),
-        audios_cnt: data.user.counters.audios && formatCnt(data.user.counters.audios),
-        ff_counters_block: ff && (npva || !my_profile),
-        friends_cnt: data.user.counters.friends && formatCnt(data.user.counters.friends),
-        show_friends: friends.length,
-        friends: friends,
-        followers_cnt: data.followers.count && formatCnt(data.followers.count),
-        show_followers: followers.length,
-        followers: followers,
-        user_status: data.user.activity,
-        show_user_info: user_birthday || user_relation,
-        show_more_user_info: user_birthday || user_relation,
-        user_birthday: user_birthday,
-        user_relation: user_relation,
-        photos: photos,
-        show_posts: data.posts.wall[0],
-        can_post: data.user.can_post,
-        posts: posts,
-        show_more_posts: +data.posts.wall[0] > 10
-      };
-      var html = tpl.get(tpl.UI_CONTAINER, tpl_data);
-      callback && callback(html);
-    });
-  }
-};
-
-
+        var my_profile = VK.viewer_id == data.user.uid,
+            npva = data.user.counters.notes || data.photos[0] || data.user.counters.videos || data.user.counters.audios,
+            ff = data.user.counters.friends || data.followers.count;
+        var bd = (data.user.bdate || '').toString().split('.'), bday = new Date(intval(bd[2]), intval(bd[1])-1, intval(bd[0])),
+            user_birthday = bd.length>1 ? (["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][bday.getMonth()] + ' ' + bday.getDate() + (bd[2] ? ', ' + bday.getFullYear() : '')) : '',
+            user_relation = ["", "Single", "In a Relationship", "Engaged", "Married", "It&#39;s Complicated", "Actively Searching", "In love"][data.user.relation];
+        var photos = [];
+        for (var i = 1; i < data.photos.length; i++) {
+          photos.push({
+            photo_link: '/photo' + data.photos[i].owner_id + '_' + data.photos[i].pid,
+            photo_src: data.photos[i].src
+          });
+        }
+        var posts = [];
+        for (var i = 1; i < data.posts.wall.length; i++) {
+          var post = data.posts.wall[i],
+              cmnts = data.comments[i - 1],
+              from = usersMap[post.from_id],
+              attachments = [],
+              comments = [];
+          if (post.attachments) {
+            for (var j = 0; j < post.attachments.length; j++) {
+              var media = post.attachments[j];
+              if (media.type == 'photo') {
+                attachments.push({
+                  media_link: '/photo' + media.photo.owner_id + '_' + media.photo.pid,
+                  media_src: media.photo.src
+                });
+              } else if (media.type == 'posted_photo') {
+                attachments.push({
+                  media_link: '/photo' + media.posted_photo.owner_id + '_' + media.posted_photo.pid,
+                  media_src: media.posted_photo.src
+                });
+              } else if (media.type == 'graffiti') {
+                attachments.push({
+                  media_link: '/graffiti' + media.graffiti.owner_id + '_' + media.graffiti.gid,
+                  media_src: media.graffiti.src
+                });
+              }
+            }
+          }
+          for (var j = cmnts.length - 1; j > 0; j--) {
+            var comment = cmnts[j],
+                user = usersMap[comment.uid];
+            comments.push(extend({
+              user_link: '/' + (user.screen_name || 'id' + user.uid),
+              user_photo: user.photo,
+              user_fullname: user.first_name + ' ' + user.last_name,
+              text: prepareText(makeReplyLink(comment.text, comment.reply_to_uid, comment.reply_to_cid)),
+              post_date: formatDate(comment.date),
+              reply_to_link: comment.reply_to_cid ? '#' + comment.reply_to_cid : '',
+              reply_to_firstname: usersMap[comment.reply_to_uid] && usersMap[comment.reply_to_uid].first_name
+            }, cmnts[0] <= 3 ? {i:1} : {}));
+          }
+          posts.push({
+            user_link: '/' + (from.screen_name || 'id' + from.uid),
+            user_photo: from.photo,
+            user_fullname: from.first_name + ' ' + from.last_name,
+            text: prepareText(post.text),
+            likes_count: post.likes.count,
+            post_date: formatDate(post.date),
+            show_attachments: attachments.length,
+            attachments: attachments,
+            show_comments: cmnts[0],
+            show_more_comments: cmnts[0] > 3,
+            show_more_comments_label: 'Show all ' + cmnts[0] + ' comments',
+            comments: comments
+          });
+        }
+        var tpl_data = {
+          my_profile: my_profile,
+          user_firstname: data.user.first_name,
+          user_fullname: data.user.first_name + ' ' + data.user.last_name,
+          profile_photo: data.user.photo_big,
+          can_write_pm: data.user.can_write_private_message && data.user.uid != VK.viewer_id,
+          is_friend: friendsMap[data.user.uid],
+          npva_counters_block: npva && !my_profile,
+          news_cnt: data.news_count && formatCnt(data.news_count),
+          photos_cnt: data.photos[0] && formatCnt(data.photos[0]),
+          videos_cnt: data.user.counters.videos && formatCnt(data.user.counters.videos),
+          audios_cnt: data.user.counters.audios && formatCnt(data.user.counters.audios),
+          ff_counters_block: ff && (npva || !my_profile),
+          friends_cnt: data.user.counters.friends && formatCnt(data.user.counters.friends),
+          show_friends: friends.length,
+          friends: friends,
+          followers_cnt: data.followers.count && formatCnt(data.followers.count),
+          show_followers: followers.length,
+          followers: followers,
+          user_status: data.user.activity,
+          show_user_info: user_birthday || user_relation,
+          show_more_user_info: user_birthday || user_relation,
+          user_birthday: user_birthday,
+          user_relation: user_relation,
+          photos: photos,
+          show_posts: data.posts.wall[0],
+          can_post: data.user.can_post,
+          posts: posts,
+          show_more_posts: +data.posts.wall[0] > 10
+        };
+        var html = tpl.get(tpl.UI_CONTAINER, tpl_data);
+        callback && callback(html);
+      });
+    }
+  };
+})();

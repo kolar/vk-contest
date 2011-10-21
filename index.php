@@ -19,7 +19,7 @@ if (!IS_AUTH) {
     <script type="text/javascript" src="main.js"></script>
     <script type="text/javascript" src="tpl.js"></script>
     <link type="text/css" rel="stylesheet" href="style.css">
-    <script type="text/javascript">app.openProfile('kolar');</script>
+    <script type="text/javascript">app.nav(location, true);</script>
   </head>
   <body>
     <div id="masks_wrapper" class="off">

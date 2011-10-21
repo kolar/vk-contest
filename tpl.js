@@ -63,11 +63,11 @@ var ui_tpls = {
   UI_WALL_POST:
 '<div class="wall_post{i:{[ first]}}">' +
   '<div class="image_column">' +
-    '<a href="{user_link}" onclick="return false;"><img src="{user_photo}" /></a>' +
+    '<a href="{user_link}" onclick="return app.nav(this);"><img src="{user_photo}" /></a>' +
   '</div>' +
   '<div class="post_column">' +
-  '<a href="{user_link}" class="author" onclick="return false;">{user_fullname}</a>' +
-  '{text?{[<div class="text">{text}</div>]}}' +
+  '<a href="{user_link}" class="author" onclick="return app.nav(this);">{user_fullname}</a>' +
+  '<div class="text">{text}</div>' +
   '{show_attachments?{[<div class="media_tiles clearfix">{attachments::UI_MEDIA_TILE}</div>]}}' +
   '<div class="like_count">{likes_count}</div>' +
   '<div class="links"><span class="date">{post_date}</span></div>' +
@@ -80,11 +80,11 @@ var ui_tpls = {
   UI_POST_COMMENT:
 '<div class="post_comment{i:{[ first]}}">' +
   '<div class="image_column">' +
-    '<a href="{user_link}" onclick="return false;"><img src="{user_photo}" /></a>' +
+    '<a href="{user_link}" onclick="return app.nav(this);"><img src="{user_photo}" /></a>' +
   '</div>' +
   '<div class="post_column">' +
-    '<a href="{user_link}" class="author" onclick="return false;">{user_fullname}</a>' +
-    '{text?{[<div class="text">{text}</div>]}}' +
+    '<a href="{user_link}" class="author" onclick="return app.nav(this);">{user_fullname}</a>' +
+    '<div class="text">{text}</div>' +
     '<div class="like_count">{likes_count}</div>' +
     '<div class="links">' +
       '<span class="date">{post_date}</span>' +
@@ -94,15 +94,16 @@ var ui_tpls = {
 '</div>',
   UI_USER_TILE:
 '<div class="user_tile">' +
-  '<a href="{user_link}"><img src="{user_photo}" /></a><a href="{user_link}" class="username">{user_firstname}</a>' +
+  '<a href="{user_link}" onclick="return app.nav(this);"><img src="{user_photo}" /></a>' +
+  '<a href="{user_link}" class="username" onclick="return app.nav(this);">{user_firstname}</a>' +
 '</div>',
   UI_PHOTO_TILE:
 '<div class="photo_tile">' +
-  '<a href="{photo_link}"><img src="{photo_src}" /></a>' +
+  '<a href="{photo_link}"onclick="return app.nav(this);"><img src="{photo_src}" /></a>' +
 '</div>',
   UI_MEDIA_TILE:
 '<div class="media_tile">' +
-  '<a href="{media_link}"><img src="{media_src}" /></a>' +
+  '<a href="{media_link}"onclick="return app.nav(this);"><img src="{media_src}" /></a>' +
 '</div>'
 };
 
