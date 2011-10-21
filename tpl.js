@@ -16,9 +16,9 @@ var ui_tpls = {
       '</ul>' +
     '</div>' +
   '</div>' +
-  '<div id="content">{UI_PROFILE}</div>' +
+  '<div id="content">{UI_CONTENT}</div>' +
 '</div>',
-  UI_PROFILE:
+  UI_CONTENT:
 '<div class="left_column">' +
   '<div class="user_photo">' +
     '<div class="img"><img src="{profile_photo}" /></div>' +
@@ -39,27 +39,44 @@ var ui_tpls = {
   '{show_followers?{[<div class="users_tiles clearfix">{followers::UI_USER_TILE}</div>]}}' +
 '</div>' +
 '<div class="right_column">' +
-  '<div id="profile_page" class="page_content">' +
-  '<h1>{user_fullname}</h1>' +
-  '{user_status?{[<div class="user_status">{user_status}</div>]}}' +
-  '{show_user_info?{[<dl>' +
-    '{user_birthday?{[<dt>Birthday:</dt><dd>{user_birthday}</dd>]}}' +
-    '{user_relation?{[<dt>Relationship status:</dt><dd>{user_relation}</dd>]}}' +
-  '</dl>]}}' +
-  '{show_more_user_info?{[<div class="show_more"><a href="#" onclick="return false;">Show more about {user_firstname}</a></div>]}}' +
-  '{photos_cnt?{[' +
-    '<div class="content_header"><a href="#" class="all_link" onclick="return false;">View all Photos</a><h4>Photos</h4></div>' +
-    '<div class="photos_tiles clearfix">{photos::UI_PHOTO_TILE}</div>' +
-  ']}}' +
-  '{show_posts?{[' +
-    '<div class="content_header">{can_post?{[<div class="post_field"><textarea>Write a public message...</textarea></div>]}:{[<h4>Wall</h4>]}}</div>' +
-    '<div class="wall_posts">' +
-      '{posts::UI_WALL_POST}' +
-      '{show_more_posts?{[<div class="show_more"><a href="#" onclick="return false;">previous posts</a></div>]}}' +
-    '</div>' +
-  ']}}</div>' +
+  '{profile_page?{[{UI_PROFILE_BODY}]}}' +
+  '{album_page?{[{UI_ALBUM_BODY}]}}' +
 '</div>' +
 '<div class="clear"></div>',
+  UI_PROFILE_BODY:
+'<div id="profile_page" class="page_content">' +
+'<h1>{user_fullname}</h1>' +
+'{user_status?{[<div class="user_status">{user_status}</div>]}}' +
+'{show_user_info?{[<dl>' +
+  '{user_birthday?{[<dt>Birthday:</dt><dd>{user_birthday}</dd>]}}' +
+  '{user_relation?{[<dt>Relationship status:</dt><dd>{user_relation}</dd>]}}' +
+'</dl>]}}' +
+'{show_more_user_info?{[<div class="show_more"><a href="#" onclick="return false;">Show more about {user_firstname}</a></div>]}}' +
+'{show_photos?{[' +
+  '<div class="content_header"><a href="{all_photos_link}" class="all_link" onclick="return app.nav(this);">View all Photos</a><h4>Photos</h4></div>' +
+  '<div class="photos_tiles clearfix">{photos::UI_PHOTO_TILE}</div>' +
+']}}' +
+'{show_posts?{[' +
+  '<div class="content_header">{can_post?{[<div class="post_field"><textarea>Write a public message...</textarea></div>]}:{[<h4>Wall</h4>]}}</div>' +
+  '<div class="wall_posts">' +
+    '{posts::UI_WALL_POST}' +
+    '{show_more_posts?{[<div class="show_more"><a href="#" onclick="return false;">previous posts</a></div>]}}' +
+  '</div>' +
+']}}</div>',
+  UI_ALBUM_BODY:
+'<div class="page_header">' +
+  '<div class="photos_header">' +
+    '<span id="photos_count_label">{photos_count}</span>' +
+    '<span id="albums_count_label"><a href="#" onclick="return false;">{albums_count}</a></span>' +
+  '</div>' +
+  '<button onclick="app.nav(\'{profile_link}\');"><span>&lsaquo;</span><div>Back to Profile</div></button>' +
+'</div>' +
+'<div id="album_page" class="page_content">' +
+  '<div class="photos_tiles clearfix">' +
+    '{photos::UI_PHOTO_TILE}' +
+    '{show_more_photos?{[<div class="show_more"><a href="#" onclick="return false;">show more photos</a></div>]}}' +
+  '</div>' +
+'</div>',
   UI_WALL_POST:
 '<div class="wall_post{i:{[ first]}}">' +
   '<div class="image_column">' +
@@ -108,6 +125,90 @@ var ui_tpls = {
 };
 
 var code_tpls = {
+  CODE_USER_INFO_VARS:
+'var ' +
+'u=API.users.get({uid:"{user}",fields:"photo,screen_name,photo_big,activity,bdate,relation,counters,can_post,can_write_private_message"})[0],' +
+'i=u.uid,' +
+'uf=API.subscriptions.getFollowers({uid:i,count:3}),' +
+'uu=uf.users[0]+","+uf.users[1]+","+uf.users[2],' +
+'ru={' +
+  'user:u,' +
+  '{need_friends?{[{CODE_PROFILE_FRIENDS}]}}' +
+  'news_count:API.wall.get({owner_id:i,count:1,filter:"owner"})[0],' +
+  'photos:API.photos.getAll({owner_id:i,count:4}),' +
+  'friends:API.friends.get({uid:i,fields:"photo,screen_name",count:18}),' +
+  'followers:uf' +
+'};',
+  CODE_PROFILE_INFO_VARS:
+'var ' +
+'pi={user_id},' +
+'pp=API.wall.get({owner_id:pi,count:10,extended:1}),' +
+'w=pp.wall,' +
+'c=[' +
+  'API.wall.getComments({owner_id:pi,post_id:w[1].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:pi,post_id:w[2].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:pi,post_id:w[3].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:pi,post_id:w[4].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:pi,post_id:w[5].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:pi,post_id:w[6].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:pi,post_id:w[7].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:pi,post_id:w[8].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:pi,post_id:w[9].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:pi,post_id:w[10].id,sort:"desc",count:3})' +
+'],' +
+'pu=' +
+  'c[0][1].uid+","+c[0][2].uid+","+c[0][3].uid+","+' +
+  'c[1][1].uid+","+c[1][2].uid+","+c[1][3].uid+","+' +
+  'c[2][1].uid+","+c[2][2].uid+","+c[2][3].uid+","+' +
+  'c[3][1].uid+","+c[3][2].uid+","+c[3][3].uid+","+' +
+  'c[4][1].uid+","+c[4][2].uid+","+c[4][3].uid+","+' +
+  'c[5][1].uid+","+c[5][2].uid+","+c[5][3].uid+","+' +
+  'c[6][1].uid+","+c[6][2].uid+","+c[6][3].uid+","+' +
+  'c[7][1].uid+","+c[7][2].uid+","+c[7][3].uid+","+' +
+  'c[8][1].uid+","+c[8][2].uid+","+c[8][3].uid+","+' +
+  'c[9][1].uid+","+c[9][2].uid+","+c[9][3].uid+","+' +
+  'c[0][1].reply_to_uid+","+c[0][2].reply_to_uid+","+' +
+  'c[0][3].reply_to_uid+","+c[1][1].reply_to_uid+","+' +
+  'c[1][2].reply_to_uid+","+c[1][3].reply_to_uid+","+' +
+  'c[2][1].reply_to_uid+","+c[2][2].reply_to_uid+","+' +
+  'c[2][3].reply_to_uid+","+c[3][1].reply_to_uid+","+' +
+  'c[3][2].reply_to_uid+","+c[3][3].reply_to_uid+","+' +
+  'c[4][1].reply_to_uid+","+c[4][2].reply_to_uid+","+' +
+  'c[4][3].reply_to_uid+","+c[5][1].reply_to_uid+","+' +
+  'c[5][2].reply_to_uid+","+c[5][3].reply_to_uid+","+' +
+  'c[6][1].reply_to_uid+","+c[6][2].reply_to_uid+","+' +
+  'c[6][3].reply_to_uid+","+c[7][1].reply_to_uid+","+' +
+  'c[7][2].reply_to_uid+","+c[7][3].reply_to_uid+","+' +
+  'c[8][1].reply_to_uid+","+c[8][2].reply_to_uid+","+' +
+  'c[8][3].reply_to_uid+","+c[9][1].reply_to_uid+","+' +
+  'c[9][2].reply_to_uid+","+c[9][3].reply_to_uid,' +
+'rp={' +
+  'posts:pp,' +
+  'comments:c' +
+'};',
+  CODE_ALBUM_INFO_VARS:
+'var ' +
+'ai={user_id},' +
+'ra={' +
+  'albums_count:API.getProfiles({uid:ai,fields:"counters"})[0].counters.albums,' +
+  'photos:API.photos.getAll({owner_id:ai,count:40})' +
+'};',
+  CODE_PROFILE_PAGE:
+'{CODE_USER_INFO_VARS}' +
+'{CODE_PROFILE_INFO_VARS}' +
+'return{' +
+  'info:ru,' +
+  'wall:rp,' +
+  'profiles:API.users.get({uids:uu+","+pu,fields:"photo,screen_name"})' +
+'};',
+  CODE_ALBUM_PAGE:
+'{CODE_USER_INFO_VARS}' +
+'{CODE_ALBUM_INFO_VARS}' +
+'return{' +
+  'info:ru,' +
+  'album:ra,' +
+  'profiles:API.users.get({uids:uu,fields:"photo,screen_name"})' +
+'};',
   CODE_PROFILE:
 'var ' +
 'z="photo,screen_name",' +
