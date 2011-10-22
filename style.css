@@ -127,43 +127,47 @@ a:hover {
   padding-bottom: 15px;
 /*  height: 2000px;*/
 }
-#background_header {
-  height: 46px;
+#page_header_bg {
   border-top: 1px solid #131313;
   border-bottom: 1px solid #000;
   background: -moz-linear-gradient(top, #333, #111);
   background: -webkit-gradient(linear, left top, left bottom, from(#333), to(#111));
   background: -o-linear-gradient(top, #333, #111);
-  position: absolute;
-  z-index: 1;
-  width: 100%;
-}
-#page_container {
   position: relative;
   z-index: 2;
+  width: 100%;
+}
+body.header_fixed #page_header_bg {
+  position: fixed;
+}
+body.header_fixed #content {
+  top: 48px;
+}
+#page_header,
+#content {
   width: 870px;
   margin: 0 auto;
 /**/    margin: 0 0 0 500px;
   color: #000;
 }
 #page_header {
-  height: 48px;
+  height: 46px;
 }
 #page_header .left_side {
   margin-left: 22px;
-  width: 220px; height: 48px;
+  width: 220px;
   float: left;
   overflow: hidden;
 }
 #page_header .icon {
-  background: url(vk.gif) no-repeat 0 11px;
-  width: 33px; height: 48px;
+  background: url(vk.gif) no-repeat 0 10px;
+  width: 33px; height: 46px;
   float: left;
 }
 #page_header .title {
   font-weight: bold;
   white-space: nowrap;
-  padding: 16px 5px 19px 40px;
+  padding: 15px 5px 18px 40px;
   height: 13px;
   color: #e7e7e7;
   text-shadow: #000 0 1px 0;
@@ -178,7 +182,7 @@ a:hover {
 }
 #page_header ul.top_links a {
   font-weight: bold;
-  padding: 16px 23px 19px;
+  padding: 15px 23px 18px;
   margin-left: 2px;
   height: 13px;
   float: left;
@@ -188,13 +192,14 @@ a:hover {
 #page_header ul.top_links a:hover {
   text-decoration: none;
   color: #e7e7e7;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 #page_header .top_search {
   float: right;
   background: -moz-linear-gradient(top, #555555, #666666);
   background: -webkit-gradient(linear, left top, left bottom, from(#555555), to(#666666));
   background: -o-linear-gradient(top, #555555, #666666);
-  margin: 12px 1px 13px;
+  margin: 11px 1px 12px;
   border-radius: 11px;
   box-shadow: inset 0 1px 2px #464646;
 }
@@ -208,6 +213,8 @@ a:hover {
 }
 
 #content {
+  position: relative;
+  z-index: 1;
   background-color: rgba(0, 0, 0, 0.02);
   border-radius: 0 0 10px 10px;
 /*    height: 1000px;*/
@@ -255,6 +262,7 @@ button {
   margin: 0; padding: 0;
   text-align: center;
   font-weight: bold;
+  cursor: pointer;
 }
 button::-moz-focus-inner {
   border: 0 none;
@@ -370,7 +378,7 @@ button::-moz-focus-inner {
 .right_column a {
   color: #405e82;
 }
-.right_column .show_more {
+.right_column .show_more_about {
   padding: 6px 4px;
   margin-left: 157px;
 }
@@ -435,7 +443,7 @@ button::-moz-focus-inner {
   color: #a4a4a4;
 }
 .right_column .wall_posts {
-  padding: 4px 0 2px;
+  padding: 4px 0 0;
 }
 .wall_posts .wall_post {
   font-family: tahoma;
@@ -445,6 +453,7 @@ button::-moz-focus-inner {
   padding-top: 10px;
   margin-top: 11px;
   border-top: 1px solid #ededed;
+  clear: left;
 }
 .wall_posts .wall_post.first {
   padding-top: 0;
@@ -453,7 +462,7 @@ button::-moz-focus-inner {
 }
 .wall_post .image_column {
   float: left;
-  padding: 2px 0 2px 1px;
+  padding: 2px 0 11px 1px;
 }
 .wall_post .image_column a {
   width: 50px; height: 50px;
@@ -498,7 +507,7 @@ button::-moz-focus-inner {
   background: url(like.gif) no-repeat right 3px;
   font-size: 13px;
 }
-.wall_posts .show_more {
+.page_content .show_more {
 /*  width: 524px;*/ height: 34px;
   margin: 11px 0 10px; padding: 1px;
   background: -moz-linear-gradient(top, #e4e4e4, #d9d9d9);
@@ -507,7 +516,7 @@ button::-moz-focus-inner {
   border-radius: 4px;
   box-shadow: 0 1px 0 #f7f7f7;
 }
-.wall_posts .show_more a {
+.page_content .show_more a {
   font-family: verdana;
   font-size: 11px;
   font-weight: bold;
@@ -555,6 +564,10 @@ button::-moz-focus-inner {
 }
 .media_tiles .media_tile img {
   max-height: 130px;
+}
+.page_content .show_more.posts {
+  margin-bottom: 0;
+  clear: left;
 }
 
 .left_column button {
@@ -631,6 +644,9 @@ button::-moz-focus-inner {
 }
 #album_page .photo_tile a {
   border-radius: 2px;
+}
+.page_content .show_more.photos {
+  margin: 10px 9px;
 }
 
 /* photo styles */

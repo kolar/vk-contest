@@ -1,11 +1,10 @@
 var ui_tpls = {
   UI_CONTAINER:
-'<div id="background_header"></div>' +
-'<div id="page_container">' +
+'<div id="page_header_bg">' +
   '<div id="page_header">' +
     '<div class="left_side">' +
       '<div class="icon"></div>' +
-      '<div id="header_title" class="title">{user_fullname}</div>' +
+      '<div class="title">{user_fullname}</div>' +
     '</div>' +
     '<div class="right_side">' +
       '<div class="top_search"><input id="header_search" type="text" value="Search..." /></div>' +
@@ -16,8 +15,8 @@ var ui_tpls = {
       '</ul>' +
     '</div>' +
   '</div>' +
-  '<div id="content">{UI_CONTENT}</div>' +
-'</div>',
+'</div>' +
+'<div id="content">{UI_CONTENT}</div>',
   UI_CONTENT:
 '<div class="left_column">' +
   '<div class="user_photo">' +
@@ -29,7 +28,7 @@ var ui_tpls = {
   ']}}' +
   '{npva_counters_block?{[<hr />]}}' +
   '{news_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">News</a><span>{news_cnt}</span></div></div>]}}' +
-  '{photos_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">Photos</a><span>{photos_cnt}</span></div></div>]}}' +
+  '{photos_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="{all_photos_link}" class="label" onclick="return app.nav(this, event);">Photos</a><span>{photos_cnt}</span></div></div>]}}' +
   '{videos_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">Videos</a><span>{videos_cnt}</span></div></div>]}}' +
   '{audios_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">Audio files</a><span>{audios_cnt}</span></div></div>]}}' +
   '{ff_counters_block?{[<hr />]}}' +
@@ -38,7 +37,7 @@ var ui_tpls = {
   '{followers_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">Followers</a><span>{followers_cnt}</span></div></div>]}}' +
   '{show_followers?{[<div class="users_tiles clearfix">{followers::UI_USER_TILE}</div>]}}' +
 '</div>' +
-'<div class="right_column">' +
+'<div id="page_body" class="right_column">' +
   '{profile_page?{[{UI_PROFILE_BODY}]}}' +
   '{album_page?{[{UI_ALBUM_BODY}]}}' +
 '</div>' +
@@ -51,16 +50,16 @@ var ui_tpls = {
   '{user_birthday?{[<dt>Birthday:</dt><dd>{user_birthday}</dd>]}}' +
   '{user_relation?{[<dt>Relationship status:</dt><dd>{user_relation}</dd>]}}' +
 '</dl>]}}' +
-'{show_more_user_info?{[<div class="show_more"><a href="#" onclick="return false;">Show more about {user_firstname}</a></div>]}}' +
+'{show_more_user_info?{[<div class="show_more_about"><a href="#" onclick="return false;">Show more about {user_firstname}</a></div>]}}' +
 '{show_photos?{[' +
-  '<div class="content_header"><a href="{all_photos_link}" class="all_link" onclick="return app.nav(this);">View all Photos</a><h4>Photos</h4></div>' +
+  '<div class="content_header"><a href="{all_photos_link}" class="all_link" onclick="return app.nav(this, event);">View all Photos</a><h4>Photos</h4></div>' +
   '<div class="photos_tiles clearfix">{photos::UI_PHOTO_TILE}</div>' +
 ']}}' +
 '{show_posts?{[' +
   '<div class="content_header">{can_post?{[<div class="post_field"><textarea>Write a public message...</textarea></div>]}:{[<h4>Wall</h4>]}}</div>' +
   '<div class="wall_posts">' +
     '{posts::UI_WALL_POST}' +
-    '{show_more_posts?{[<div class="show_more"><a href="#" onclick="return false;">previous posts</a></div>]}}' +
+    '{show_more_posts?{[<div class="show_more posts"><a href="#" onclick="return false;">previous posts</a></div>]}}' +
   '</div>' +
 ']}}</div>',
   UI_ALBUM_BODY:
@@ -73,23 +72,23 @@ var ui_tpls = {
 '</div>' +
 '<div id="album_page" class="page_content">' +
   '<div class="photos_tiles clearfix">' +
-    '{photos::UI_PHOTO_TILE}' +
-    '{show_more_photos?{[<div class="show_more"><a href="#" onclick="return false;">show more photos</a></div>]}}' +
+    '{all_photos::UI_PHOTO_TILE}' +
   '</div>' +
+  '{show_more_photos?{[<div class="show_more photos"><a href="#" onclick="return false;">show more photos</a></div>]}}' +
 '</div>',
   UI_WALL_POST:
 '<div class="wall_post{i:{[ first]}}">' +
   '<div class="image_column">' +
-    '<a href="{user_link}" onclick="return app.nav(this);"><img src="{user_photo}" /></a>' +
+    '<a href="{user_link}" onclick="return app.nav(this, event);"><img src="{user_photo}" /></a>' +
   '</div>' +
   '<div class="post_column">' +
-  '<a href="{user_link}" class="author" onclick="return app.nav(this);">{user_fullname}</a>' +
+  '<a href="{user_link}" class="author" onclick="return app.nav(this, event);">{user_fullname}</a>' +
   '<div class="text">{text}</div>' +
   '{show_attachments?{[<div class="media_tiles clearfix">{attachments::UI_MEDIA_TILE}</div>]}}' +
   '<div class="like_count">{likes_count}</div>' +
   '<div class="links"><span class="date">{post_date}</span></div>' +
   '{show_comments?{[' +
-    '{show_more_comments?{[<div class="show_more"><a href="#" onclick="return false;">{show_more_comments_label}</a></div>]}}' +
+    '{show_more_comments?{[<div class="show_more comments"><a href="#" onclick="return false;">{show_more_comments_label}</a></div>]}}' +
     '<div class="post_comments">{comments::UI_POST_COMMENT}</div>' +
   ']}}' +
   '</div>' +
@@ -97,10 +96,10 @@ var ui_tpls = {
   UI_POST_COMMENT:
 '<div class="post_comment{i:{[ first]}}">' +
   '<div class="image_column">' +
-    '<a href="{user_link}" onclick="return app.nav(this);"><img src="{user_photo}" /></a>' +
+    '<a href="{user_link}" onclick="return app.nav(this, event);"><img src="{user_photo}" /></a>' +
   '</div>' +
   '<div class="post_column">' +
-    '<a href="{user_link}" class="author" onclick="return app.nav(this);">{user_fullname}</a>' +
+    '<a href="{user_link}" class="author" onclick="return app.nav(this, event);">{user_fullname}</a>' +
     '<div class="text">{text}</div>' +
     '<div class="like_count">{likes_count}</div>' +
     '<div class="links">' +
@@ -111,16 +110,16 @@ var ui_tpls = {
 '</div>',
   UI_USER_TILE:
 '<div class="user_tile">' +
-  '<a href="{user_link}" onclick="return app.nav(this);"><img src="{user_photo}" /></a>' +
-  '<a href="{user_link}" class="username" onclick="return app.nav(this);">{user_firstname}</a>' +
+  '<a href="{user_link}" onclick="return app.nav(this, event);"><img src="{user_photo}" /></a>' +
+  '<a href="{user_link}" class="username" onclick="return app.nav(this, event);">{user_firstname}</a>' +
 '</div>',
   UI_PHOTO_TILE:
 '<div class="photo_tile">' +
-  '<a href="{photo_link}"onclick="return app.nav(this);"><img src="{photo_src}" /></a>' +
+  '<a href="{photo_link}"onclick="return app.nav(this, event);"><img src="{photo_src}" /></a>' +
 '</div>',
   UI_MEDIA_TILE:
 '<div class="media_tile">' +
-  '<a href="{media_link}"onclick="return app.nav(this);"><img src="{media_src}" /></a>' +
+  '<a href="{media_link}"onclick="return app.nav(this, event);"><img src="{media_src}" /></a>' +
 '</div>'
 };
 
@@ -141,20 +140,19 @@ var code_tpls = {
 '};',
   CODE_PROFILE_INFO_VARS:
 'var ' +
-'pi={user_id},' +
-'pp=API.wall.get({owner_id:pi,count:10,extended:1}),' +
+'pp=API.wall.get({owner_id:i,count:10,extended:1}),' +
 'w=pp.wall,' +
 'c=[' +
-  'API.wall.getComments({owner_id:pi,post_id:w[1].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:pi,post_id:w[2].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:pi,post_id:w[3].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:pi,post_id:w[4].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:pi,post_id:w[5].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:pi,post_id:w[6].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:pi,post_id:w[7].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:pi,post_id:w[8].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:pi,post_id:w[9].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:pi,post_id:w[10].id,sort:"desc",count:3})' +
+  'API.wall.getComments({owner_id:i,post_id:w[1].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[2].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[3].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[4].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[5].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[6].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[7].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[8].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[9].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[10].id,sort:"desc",count:3})' +
 '],' +
 'pu=' +
   'c[0][1].uid+","+c[0][2].uid+","+c[0][3].uid+","+' +
@@ -188,10 +186,9 @@ var code_tpls = {
 '};',
   CODE_ALBUM_INFO_VARS:
 'var ' +
-'ai={user_id},' +
 'ra={' +
-  'albums_count:API.getProfiles({uid:ai,fields:"counters"})[0].counters.albums,' +
-  'photos:API.photos.getAll({owner_id:ai,count:40})' +
+  'albums_count:API.getProfiles({uid:i,fields:"counters"})[0].counters.albums,' +
+  'photos:API.photos.getAll({owner_id:i,count:80})' +
 '};',
   CODE_PROFILE_PAGE:
 '{CODE_USER_INFO_VARS}' +
@@ -201,6 +198,13 @@ var code_tpls = {
   'wall:rp,' +
   'profiles:API.users.get({uids:uu+","+pu,fields:"photo,screen_name"})' +
 '};',
+  CODE_PROFILE_INFO_ONLY:
+'var i="{user_id}";' +
+'{CODE_PROFILE_INFO_VARS}' +
+'return{' +
+  'wall:rp,' +
+  'profiles:API.users.get({uids:pu,fields:"photo,screen_name"})' +
+'};',
   CODE_ALBUM_PAGE:
 '{CODE_USER_INFO_VARS}' +
 '{CODE_ALBUM_INFO_VARS}' +
@@ -209,65 +213,11 @@ var code_tpls = {
   'album:ra,' +
   'profiles:API.users.get({uids:uu,fields:"photo,screen_name"})' +
 '};',
-  CODE_PROFILE:
-'var ' +
-'z="photo,screen_name",' +
-'u=API.users.get({uid:"{user_id}",fields:z+",photo_big,activity,bdate,relation,counters,can_post,can_write_private_message"})[0],' +
-'i=u.uid,' +
-'f=API.subscriptions.getFollowers({uid:i,count:3}),' +
-'p=API.wall.get({owner_id:i,count:10,extended:1}),' +
-'w=p.wall,' +
-'c=[' +
-  'API.wall.getComments({owner_id:i,post_id:w[1].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[2].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[3].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[4].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[5].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[6].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[7].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[8].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[9].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[10].id,sort:"desc",count:3})' +
-'];' +
+  CODE_ALBUM_INFO_ONLY:
+'var i="{user_id}";' +
+'{CODE_ALBUM_INFO_VARS}' +
 'return{' +
-  'user:u,' +
-  '{need_friends?{[{CODE_PROFILE_FRIENDS}]}}' +
-  'news_count:API.wall.get({owner_id:i,count:1,filter:"owner"})[0],' +
-  'photos:API.photos.getAll({owner_id:i,count:4}),' +
-  'friends:API.friends.get({uid:i,fields:z,count:18}),' +
-  'followers:f,' +
-  'posts:p,' +
-  'comments:c,' +
-  'profiles:API.users.get({' +
-    'uids:' +
-      'f.users[0]+","+f.users[1]+","+f.users[2]+","+' +
-      'c[0][1].uid+","+c[0][2].uid+","+c[0][3].uid+","+' +
-      'c[1][1].uid+","+c[1][2].uid+","+c[1][3].uid+","+' +
-      'c[2][1].uid+","+c[2][2].uid+","+c[2][3].uid+","+' +
-      'c[3][1].uid+","+c[3][2].uid+","+c[3][3].uid+","+' +
-      'c[4][1].uid+","+c[4][2].uid+","+c[4][3].uid+","+' +
-      'c[5][1].uid+","+c[5][2].uid+","+c[5][3].uid+","+' +
-      'c[6][1].uid+","+c[6][2].uid+","+c[6][3].uid+","+' +
-      'c[7][1].uid+","+c[7][2].uid+","+c[7][3].uid+","+' +
-      'c[8][1].uid+","+c[8][2].uid+","+c[8][3].uid+","+' +
-      'c[9][1].uid+","+c[9][2].uid+","+c[9][3].uid+","+' +
-      'c[0][1].reply_to_uid+","+c[0][2].reply_to_uid+","+' +
-      'c[0][3].reply_to_uid+","+c[1][1].reply_to_uid+","+' +
-      'c[1][2].reply_to_uid+","+c[1][3].reply_to_uid+","+' +
-      'c[2][1].reply_to_uid+","+c[2][2].reply_to_uid+","+' +
-      'c[2][3].reply_to_uid+","+c[3][1].reply_to_uid+","+' +
-      'c[3][2].reply_to_uid+","+c[3][3].reply_to_uid+","+' +
-      'c[4][1].reply_to_uid+","+c[4][2].reply_to_uid+","+' +
-      'c[4][3].reply_to_uid+","+c[5][1].reply_to_uid+","+' +
-      'c[5][2].reply_to_uid+","+c[5][3].reply_to_uid+","+' +
-      'c[6][1].reply_to_uid+","+c[6][2].reply_to_uid+","+' +
-      'c[6][3].reply_to_uid+","+c[7][1].reply_to_uid+","+' +
-      'c[7][2].reply_to_uid+","+c[7][3].reply_to_uid+","+' +
-      'c[8][1].reply_to_uid+","+c[8][2].reply_to_uid+","+' +
-      'c[8][3].reply_to_uid+","+c[9][1].reply_to_uid+","+' +
-      'c[9][2].reply_to_uid+","+c[9][3].reply_to_uid,' +
-    'fields:z' +
-  '})' +
+  'album:ra' +
 '};',
   CODE_PROFILE_FRIENDS:
 'friends_uids:API.friends.get({uid:API.getViewerId()}),'

@@ -41,6 +41,8 @@ function maskOff(out) {
   }, isReady = false, readyList = [], ready = function() {
     if (!isReady) {
       isReady = true;
+      window.htmlNode = geByTag1('html');
+      window.bodyNode = geByTag1('body');
       if (readyList) {
         var fn_temp = null;
         while (fn_temp = readyList.shift()) {
@@ -65,7 +67,7 @@ function maskOff(out) {
   var isReady = false, readyList = [];
   function onHeadReady(fn) {
     if (!fn) return;
-    var head = document.getElementsByTagName('head')[0];
+    var head = geByTag1('head');
     if (fn.call) {
       if (isReady) {
         fn.call(document, head);
@@ -87,6 +89,12 @@ function maskOff(out) {
 function ge(id) {
   return (typeof id === 'string') ? document.getElementById(id) : id;
 }
+function geByTag(tagName, elem) {
+  return (elem || document).getElementsByTagName(tagName);
+}
+function geByTag1(tagName, elem) {
+  return geByTag(tagName, elem)[0];
+}
 function remove(o) {
   o = ge(o);
   if (o && o.parentNode) o.parentNode.removeChild(o);
@@ -100,6 +108,28 @@ function ce(tag, attr) {
   }
   return el;
 }
+var cdf = (function(doc) {
+  var frag = doc.createDocumentFragment(),
+      elem = doc.createElement('div'),
+      range = doc.createRange && doc.createRange();
+  frag.appendChild(elem);
+  range && range.selectNodeContents(elem);
+  
+  return range && range.createContextualFragment ?
+    function (html) {
+      if (!html) return doc.createDocumentFragment();
+      return range.createContextualFragment(html);
+    } :
+    function (html) {
+      if (!html) return doc.createDocumentFragment();
+      elem.innerHTML = html;
+      var frag = doc.createDocumentFragment();
+      while (elem.firstChild) {
+        frag.appendChild(elem.firstChild);
+      }
+      return frag;
+    };
+})(document);
 function intval(value) {
   if (value === true) return 1;
   return parseInt(value) || 0;
@@ -171,7 +201,7 @@ function formatDate(timestamp, options) {
         var dd = d.getDate(),
             dm = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][d.getMonth()],
             dy = d.getFullYear();
-        darr.push((o.shortMonth ? dm.substr(0, 3) + '.' : dm) + ' ' + dd + ',' + (o.shortYear ? (_dd > (o.shortYear * 2592000) ? ' ' + dy : '') : ' ' + dy));
+        darr.push((o.shortMonth ? dm.substr(0, 3) + '.' : dm) + ' ' + dd + (o.shortYear ? (_dd > (o.shortYear * 2592000) ? ', ' + dy : (o.showTime ? ',' : '')) : ', ' + dy));
       }
     }
   }
@@ -256,7 +286,7 @@ var VK = (function() {
   
   return {
     _callbacks: {},
-    viewer_id: cookie.get('viewer_id') || null,
+    viewer_id: +cookie.get('viewer_id') || null,
     access_token: cookie.get('access_token') || null,
     api: function(method, params, callback) {
       if (typeof callback === 'undefined' && typeof params === 'function') {
@@ -285,7 +315,8 @@ var VK = (function() {
 var app = (function() {
   var is_history = !!(window.history && history.pushState),
       current_link = null;
-  function nav(link, no_push) {
+  function nav(link, e, no_push) {
+    if (e && (e.which > 1 || e.button > 1 || e.ctrlKey || e.shiftKey || e.metaKey)) return true;
     if (!no_push && !is_history) return true;
     if (!link) return true;
     var push = link, path = '', params = {};
@@ -300,12 +331,12 @@ var app = (function() {
       params = qs2obj(pp.join('?'));
     }
     if (no_push && current_link == push) return false;
-    current_link = push;
-    if (!no_push) {
+    if (!no_push && current_link != push) {
       try {
         history.pushState(null, null, push);
       } catch (e) { return true; }
     }
+    current_link = push;
     return processLink(path, params);
   }
   function processLink(path, params) {
@@ -325,7 +356,7 @@ var app = (function() {
   }
   if (is_history) {
     window.addEventListener('popstate', function(e) {
-      nav(location, true);
+      nav(location, null, true);
     }, false);
   }
   
@@ -348,9 +379,10 @@ var app = (function() {
           screen_name: 'id' + user.uid
         };
       }
-      extend(usersMap[user.uid], user, {
+      var u = extend(usersMap[user.uid], user, {
         name: user.first_name + ' ' + user.last_name
       });
+      usersMap[u.screen_name] = usersMap['id' + u.uid] = u;
     }
   }
   function getUser(uid) {
@@ -370,7 +402,7 @@ var app = (function() {
     info.user.relation_name = lang.relation_names[info.user.relation || 0];
     saveUsers(info.user);
     
-    if (info.friends) {
+    if (isArray(info.friends)) {
       saveUsers(info.friends);
       var friends_data = info.friends.sort(function() { return Math.random() < 0.5 ? 1 : -1; }).slice(0, 6);
       for (var i = 0, l = friends_data.length; i < l; i++) {
@@ -522,7 +554,7 @@ var app = (function() {
       }
     }
     return {
-      photos: photos,
+      all_photos: photos,
       photos_count: numeric(photos_cnt, ['%s photo', '%s photos']),
       albums_count: numeric(album.albums_count || 0, ['%s album', '%s albums']),
       show_more_photos: photos_cnt > 40
@@ -533,22 +565,46 @@ var app = (function() {
     viewer_id: VK.viewer_id,
     nav: nav,
     user: getUser,
+    scroll: function(to) {
+      if (htmlNode) htmlNode.scrollTop = to || 0;
+      if (bodyNode) bodyNode.scrollTop = to || 0;
+    },
     openProfile: function(user) {
-      this.getProfilePageInfo(user, function(html) {
-        onDOMReady(function() {
-          ge('container').innerHTML = html;
+      if (current_user_info && current_user_id == getUser(user).uid) {
+        this.getProfileInfoOnly(user, function(html) {
+          onDOMReady(function() {
+            ge('page_body').innerHTML = html;
+            app.scroll();
+          });
         });
-      });
+      } else {
+        this.getProfilePageInfo(user, function(html) {
+          onDOMReady(function() {
+            ge('container').innerHTML = html;
+            app.scroll();
+          });
+        });
+      }
     },
     openPhotos: function(user) {
-      this.getAlbumPageInfo(user, function(html) {
-        onDOMReady(function() {
-          ge('container').innerHTML = html;
+      if (current_user_info && current_user_id == getUser(user).uid) {
+        this.getAlbumInfoOnly(user, function(html) {
+          onDOMReady(function() {
+            ge('page_body').innerHTML = html;
+            app.scroll();
+          });
         });
-      });
+      } else {
+        this.getAlbumPageInfo(user, function(html) {
+          onDOMReady(function() {
+            ge('container').innerHTML = html;
+            app.scroll();
+          });
+        });
+      }
     },
     getProfilePageInfo: function(user, callback) {
-      var code = tpl.get(tpl.CODE_PROFILE_PAGE, {user: user, user_id: 'i', need_friends: !viewers_friends});
+      var code = tpl.get(tpl.CODE_PROFILE_PAGE, {user: user, need_friends: !viewers_friends});
       VK.api('execute', {code: code}, function(data) {
         if (!data.response) return; // ToDo: error msg 'api error'
         if (!data.response.info.user) return; // ToDo: error msg 'user not found'
@@ -565,8 +621,22 @@ var app = (function() {
         callback && callback(html);
       });
     },
+    getProfileInfoOnly: function(user, callback) {
+      var code = tpl.get(tpl.CODE_PROFILE_INFO_ONLY, {user_id: user});
+      VK.api('execute', {code: code}, function(data) {
+        if (!data.response) return; // ToDo: error msg 'api error'
+        var res = data.response,
+            wall = res.wall,
+            profiles = res.profiles;
+        profiles && saveUsers(profiles);
+        var wall_info = parseProfileInfo(wall);
+        var tpl_data = extend(current_user_info, wall_info);
+        var html = tpl.get(tpl.UI_PROFILE_BODY, tpl_data);
+        callback && callback(html);
+      });
+    },
     getAlbumPageInfo: function(user, callback) {
-      var code = tpl.get(tpl.CODE_ALBUM_PAGE, {user: user, user_id: 'i', need_friends: !viewers_friends});
+      var code = tpl.get(tpl.CODE_ALBUM_PAGE, {user: user, need_friends: !viewers_friends});
       VK.api('execute', {code: code}, function(data) {
         if (!data.response) return; // ToDo: error msg 'api error'
         if (!data.response.info.user) return; // ToDo: error msg 'user not found'
@@ -580,6 +650,18 @@ var app = (function() {
         var album_info = parseAlbumInfo(album);
         var tpl_data = extend({album_page: true}, user_info, album_info);
         var html = tpl.get(tpl.UI_CONTAINER, tpl_data);
+        callback && callback(html);
+      });
+    },
+    getAlbumInfoOnly: function(user, callback) {
+      var code = tpl.get(tpl.CODE_ALBUM_INFO_ONLY, {user_id: user});
+      VK.api('execute', {code: code}, function(data) {
+        if (!data.response) return; // ToDo: error msg 'api error'
+        var res = data.response,
+            album = res.album;
+        var album_info = parseAlbumInfo(album);
+        var tpl_data = extend(current_user_info, album_info);
+        var html = tpl.get(tpl.UI_ALBUM_BODY, tpl_data);
         callback && callback(html);
       });
     }
