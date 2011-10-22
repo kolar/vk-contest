@@ -1,5 +1,22 @@
 var ui_tpls = {
   UI_CONTAINER:
+'<div id="photo_bg"></div>' +
+'<div id="photo_view_layout">' +
+  '<div id="photo_view_container">' +
+    '<div id="photo_left" class="photo_nav"><div></div></div>' +
+    '<div id="photo_close" class="photo_nav"><div></div></div>' +
+    '<div id="photo_container" style="width: 792px;">' +
+      '<div class="photo_box" style="height: 530px;">' +
+        '<div class="photo_frame" style="width: 792px; height: 530px;">' +
+          '<div class="img"><img src="" /></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="photos_summary"></div>' +
+      '<div class="photo_desc"></div>' +
+    '</div>' +
+  '</div>' +
+  '<div><!-- Opera margin-bottom fix --></div>' +
+'</div>' +
 '<div id="page_header_bg">' +
   '<div id="page_header">' +
     '<div class="left_side">' +

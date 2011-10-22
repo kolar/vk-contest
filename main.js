@@ -283,6 +283,9 @@ var VK = (function() {
       return url;
     }
   }
+  function rnd() {
+    return Math.random().toString(36).substr(-8);
+  }
   
   return {
     _callbacks: {},
@@ -303,6 +306,7 @@ var VK = (function() {
         callback && callback(data);
         deleteCallback(cid);
       }
+      params.rnd = rnd();
       params.callback = 'VK._callbacks[' + cid + ']';
       var url = prepareUrl('https://api.vkontakte.ru/method/' + method, params);
       onHeadReady(function(head) {
