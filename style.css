@@ -531,6 +531,9 @@ button::-moz-focus-inner {
   color: #999;
   text-shadow: #fff 0 1px 0;
 }
+.page_content .show_more a:hover {
+  text-decoration: none;
+}
 .wall_posts .post_comments {
   padding: 0 4px 2px 0;
 }
@@ -555,6 +558,7 @@ button::-moz-focus-inner {
   margin: 5px 10px 5px 0;
   text-align: center;
   height: 98px;
+  position: relative;
 }
 .media_tiles .media_tile a {
   max-width: 130px;
@@ -563,8 +567,23 @@ button::-moz-focus-inner {
   border-radius: 4px;
   overflow: hidden;
 }
+.media_tiles .media_tile a:hover {
+  text-decoration: none;
+}
 .media_tiles .media_tile.graffiti a {
   max-width: 200px;
+}
+.media_tile a span {
+  position: absolute;
+  bottom: 0; right: 0;
+  display: block;
+  font-size: 10px;
+  line-height: 12px;
+  padding: 0px 3px 1px;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  margin: 2px;
 }
 .media_tiles .media_tile img {
   max-height: 98px;

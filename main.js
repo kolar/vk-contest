@@ -431,18 +431,26 @@ var app = (function() {
   function isFriend(uid) {
     return viewers_friends && viewers_friends[uid] || false;
   }
-  function saveUsers(uids) {
+  function saveUsers(uids, name_case) {
     if (!isArray(uids)) uids = [uids];
     for (var i = 0; i < uids.length; i++) {
       var user = uids[i];
+      if (name_case) {
+        user[name_case] = {
+          first_name: user.first_name,
+          last_name: user.last_name,
+          name: user.first_name + ' ' + user.last_name
+        };
+        delete user.first_name;
+        delete user.last_name;
+      }
       if (!usersMap[user.uid]) {
         usersMap[user.uid] = {
           screen_name: 'id' + user.uid
         };
       }
-      var u = extend(usersMap[user.uid], user, {
-        name: user.first_name + ' ' + user.last_name
-      });
+      var u = extend(usersMap[user.uid], user);
+      extend(u, {name: u.first_name + ' ' + u.last_name});
       usersMap[u.screen_name] = usersMap['id' + u.uid] = u;
     }
   }
@@ -540,6 +548,7 @@ var app = (function() {
   function parseProfileInfo(posts) {
     var posts_data = [];
     saveUsers(posts.profiles);
+    saveUsers(posts.dat_profiles, 'dat');
     var posts_count = posts.wall.shift() || 0;
     for (var i = 0; i < posts.wall.length; i++) {
       if (!posts.wall[i] || !posts.wall[i].id) continue;
@@ -577,13 +586,26 @@ var app = (function() {
               media_link: '/graffiti' + media.graffiti.owner_id + '_' + media.graffiti.gid,
               media_src: media.graffiti.src
             });
+          } else if (media.type == 'video') {
+            var vd = media.video.duration,
+                h = Math.floor(vd / 3600), vm = vd % 3600,
+                m = Math.floor(vm / 60), sm = (m < 10 && h ? '0' + m : m),
+                s = vm % 60, ss = (s < 10 ? '0' + s : s), ds = (h ? h + ':' : '') + sm + ':' + ss;
+            attachments.push({
+              media_type: media.type,
+              media_link: '/video' + media.video.owner_id + '_' + media.video.vid,
+              media_src: media.video.image_small,
+              duration: vd ? ds : 0
+            });
           }
         }
         photo.saveSource(source_name, photo_attachments);
       }
+      var ru = getUser(1).first_name == 'Павел';
       for (var j = cmnts.length - 1; j >= 0; j--) {
         var comment = cmnts[j],
-            user = getUser(comment.uid), reply_user = getUser(comment.reply_to_uid);
+            user = getUser(comment.uid), reply_user = getUser(comment.reply_to_uid),
+            reply_text = reply_user && ((ru ? '' : 'to ') + (reply_user.dat && reply_user.dat.first_name || reply_user.first_name || ''));
         comments.push(extend({
           user_link: '/' + user.screen_name,
           user_photo: user.photo,
@@ -591,10 +613,11 @@ var app = (function() {
           text: prepareText(makeReplyLink(comment.text, comment.reply_to_uid, comment.reply_to_cid)),
           post_date: formatDate(comment.date),
           reply_to_link: comment.reply_to_uid ? '/' + reply_user.screen_name : '',
-          reply_to_firstname: comment.reply_to_uid ? reply_user.first_name : ''
+          reply_to_firstname: comment.reply_to_uid ? reply_text : ''
         }, comments_count <= 3 ? {i:1} : {}));
       }
       posts_data.push({
+        post_id: post.id,
         user_link: '/' + from.screen_name,
         user_photo: from.photo,
         user_fullname: from.name,
@@ -605,7 +628,8 @@ var app = (function() {
         attachments: attachments,
         show_comments: comments_count,
         show_more_comments: comments_count > 3,
-        show_more_comments_label: 'Show all ' + comments_count + ' comments',
+        show: true,
+        show_more_comments_label: comments_count > 100 ? 'last 100 replies of ' + comments_count : 'all ' + comments_count + ' replies',
         comments: comments
       });
     }
@@ -736,6 +760,9 @@ var app = (function() {
       } else {
         photo.close(null, true);
       }
+      if (current.user_id != uid) {
+        photo.saveSource('photos' + app.current.user_id, null);
+      }
       method.call(this, user, function(html, z) {
         if (app.current.link == '/') {
           app.nav('/' + getUser(current.user_id).screen_name, null, {replace: true, push_only: true});
@@ -839,6 +866,46 @@ var app = (function() {
         var html = tpl.get(tpl.UI_ALBUM_BODY, tpl_data);
         callback && callback(html);
       });
+    },
+    shComments: function(a, post_id, show) {
+      var sm_cont = a.parentNode, comments_cont = geByClass1('post_comments', sm_cont.parentNode);
+      var code = tpl.get(tpl.CODE_COMMENTS, {owner_id: current.user_id, post_id: post_id, all: show});
+      VK.api('execute', {code: code}, function(data) {
+        if (!data.response) return; // ToDo: error msg 'api error'
+        var res = data.response,
+            cmnts = res.comments,
+            profiles = res.profiles,
+            dat_profiles = res.dat_profiles;
+        profiles && saveUsers(profiles);
+        dat_profiles && saveUsers(dat_profiles, 'dat');
+        for (var i = 0, l = dat_profiles.length; i<l; i++) {
+          
+        }
+        var comments = [], comments_count = cmnts.shift() || 0,
+            hide_sm_link = comments_count <= 3 || comments_count <= 5 && show;
+        var ru = getUser(1).first_name == 'Павел';
+        for (var i = cmnts.length - 1; i >= 0; i--) {
+          var comment = cmnts[i],
+              user = getUser(comment.uid), reply_user = getUser(comment.reply_to_uid),
+              reply_text = reply_user && ((ru ? '' : 'to ') + (reply_user.dat && reply_user.dat.first_name || reply_user.first_name || ''));
+          comments.push(extend({
+            user_link: '/' + user.screen_name,
+            user_photo: user.photo,
+            user_fullname: user.name,
+            text: prepareText(makeReplyLink(comment.text, comment.reply_to_uid, comment.reply_to_cid)),
+            post_date: formatDate(comment.date),
+            reply_to_link: comment.reply_to_uid ? '/' + reply_user.screen_name : '',
+            reply_to_firstname: comment.reply_to_uid ? reply_text : ''
+          }, hide_sm_link ? {i:1} : {}));
+        }
+        if (hide_sm_link) {
+          remove(sm_cont);
+        } else {
+          sm_cont.innerHTML = tpl.get(tpl.UI_SM_COMMENTS_LINK, {show: !show, post_id: post_id, show_more_comments_label: comments_count > 100 ? 'last 100 replies of ' + comments_count : 'all ' + comments_count + ' replies'});
+        }
+        comments_cont.innerHTML = tpl.get(tpl.UI_POST_COMMENT, comments);
+      });
+      return false;
     }
   };
 })();

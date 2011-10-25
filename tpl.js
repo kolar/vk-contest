@@ -88,11 +88,13 @@ var ui_tpls = {
   '{likes_count?{[<div class="like_count">{likes_count}</div>]}}' +
   '<div class="links"><span class="date">{post_date}</span></div>' +
   '{show_comments?{[' +
-    '{show_more_comments?{[<div class="show_more comments"><a href="#" onclick="return false;">{show_more_comments_label}</a></div>]}}' +
+    '{show_more_comments?{[<div class="show_more comments">{UI_SM_COMMENTS_LINK}</div>]}}' +
     '<div class="post_comments">{comments::UI_POST_COMMENT}</div>' +
   ']}}' +
   '</div>' +
 '</div>',
+  UI_SM_COMMENTS_LINK:
+'<a href="" onclick="return app.shComments(this, {post_id}, {show});">{show?{[Show {show_more_comments_label}]}:{[Hide comments]}}</a>',
   UI_POST_COMMENT:
 '<div class="post_comment{i:{[ first]}}">' +
   '<div class="image_column">' +
@@ -104,7 +106,7 @@ var ui_tpls = {
     '{likes_count?{[<div class="like_count">{likes_count}</div>]}}' +
     '<div class="links">' +
       '<span class="date">{post_date}</span>' +
-      '{reply_to_link?{[<span class="delim">-</span><a href="{reply_to_link}" class="reply_to" onclick="return false;">to {reply_to_firstname}</a>]}}' +
+      '{reply_to_link?{[<span class="delim">-</span><a href="{reply_to_link}" class="reply_to" onclick="return false;">{reply_to_firstname}</a>]}}' +
     '</div>' +
   '</div>' +
 '</div>',
@@ -119,7 +121,10 @@ var ui_tpls = {
 '</div>',
   UI_MEDIA_TILE:
 '<div class="media_tile {media_type}">' +
-  '<a href="{media_link}"{onclick?{[ onclick="{onclick}"]}}><img src="{media_src}" /></a>' +
+  '<a href="{media_link}"{onclick?{[ onclick="{onclick}"]}}>' +
+    '{duration?{[<span>{duration}</span>]}}' +
+    '<img src="{media_src}" />' +
+  '</a>' +
 '</div>',
   UI_PHOTO_VIEW:
 '<div id="pv_bg"></div>' +
@@ -159,7 +164,7 @@ var code_tpls = {
 'var ' +
 'pp=API.wall.get({owner_id:i,count:10,extended:1}),' +
 'w=pp.wall,' +
-'rp=pp+{wall:[' +
+'pw=[' +
   'w[0],' +
   'w[1]+{comments: API.wall.getComments({owner_id:i,post_id:w[1].id,sort:"desc",count:3})},' +
   'w[2]+{comments: API.wall.getComments({owner_id:i,post_id:w[2].id,sort:"desc",count:3})},' +
@@ -171,20 +176,21 @@ var code_tpls = {
   'w[8]+{comments: API.wall.getComments({owner_id:i,post_id:w[8].id,sort:"desc",count:3})},' +
   'w[9]+{comments: API.wall.getComments({owner_id:i,post_id:w[9].id,sort:"desc",count:3})},' +
   'w[10]+{comments: API.wall.getComments({owner_id:i,post_id:w[10].id,sort:"desc",count:3})}' +
-']},' +
-'c=rp.wall@.comments,' +
+'],' +
+'c=pw@.comments,' +
 'pu=' +
   'c[1]@.uid+c[2]@.uid+c[3]@.uid+c[4]@.uid+c[5]@.uid+' +
-  'c[6]@.uid+c[7]@.uid+c[8]@.uid+c[9]@.uid+c[10]@.uid+' +
-  'c[1]@.reply_to_uid+c[2]@.reply_to_uid+' +
+  'c[6]@.uid+c[7]@.uid+c[8]@.uid+c[9]@.uid+c[10]@.uid,' +
+'gu=c[1]@.reply_to_uid+c[2]@.reply_to_uid+' +
   'c[3]@.reply_to_uid+c[4]@.reply_to_uid+' +
   'c[5]@.reply_to_uid+c[6]@.reply_to_uid+' +
   'c[7]@.reply_to_uid+c[8]@.reply_to_uid+' +
-  'c[9]@.reply_to_uid+c[10]@.reply_to_uid;',
+  'c[9]@.reply_to_uid+c[10]@.reply_to_uid,' +
+'rp=pp+{wall:pw,dat_profiles:API.users.get({uids:[1]+gu,fields:"screen_name",name_case:"dat"})};',
   CODE_ALBUM_INFO_VARS:
 'var ' +
 'ra={' +
-  'albums_count:API.getProfiles({uid:i,fields:"counters"})[0].counters.albums,' +
+  'albums_count:API.users.get({uid:i,fields:"counters"})[0].counters.albums,' +
   'photos:API.photos.getAll({owner_id:i,count:40})' +
 '};',
   CODE_Z_ALL_VARS:
@@ -250,6 +256,13 @@ var code_tpls = {
 '{CODE_ALBUM_INFO_VARS}' +
 'return{' +
   'album:ra' +
+'};',
+  CODE_COMMENTS:
+'var c=API.wall.getComments({owner_id:"{owner_id}",post_id:"{post_id}",sort:"desc",count:{all?{[100]}:{[3]}}});' +
+'return{' +
+'comments:c,' +
+'profiles:API.users.get({uids:c@.uid,fields:"photo,screen_name"}),' +
+'dat_profiles:API.users.get({uids:[1]+c@.reply_to_uid,fields:"screen_name",name_case:"dat"})' +
 '};',
   CODE_PROFILE_FRIENDS:
 'friends_uids:API.friends.get({uid:API.getViewerId()}),'

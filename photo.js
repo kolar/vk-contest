@@ -51,6 +51,7 @@ var photo = (function() {
     else return photosMap[id] || {};
   }
   function saveSource(name, data, len, offset) {
+    if (data === null) { delete sourcesMap[name]; return; }
     offset = offset || 0;
     if (!sourcesMap[name]) sourcesMap[name] = new Array(len ? len : data.length);
     var source = sourcesMap[name];
