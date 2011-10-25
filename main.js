@@ -89,15 +89,68 @@ function maskOff(out) {
 function ge(id) {
   return (typeof id === 'string') ? document.getElementById(id) : id;
 }
+function geByClass(className, elem, tagName) {
+  elem = elem || document;
+  tagName = tagName || '*';
+  if (elem.getElementsByClassName) {
+    var elems = elem.getElementsByClassName(className);
+    if (tagName == '*') {
+      return Array.prototype.slice.call(elems);
+    } else {
+      var res = [];
+      tagName = tagName.toUpperCase();
+      for (var i = 0, l = elems.length; i < l; i++) {
+        if (elems[i].tagName.toUpperCase() == tagName) {
+          res.push(elems[i]);
+        }
+      }
+      return res;
+    }
+  }
+  var elems = geByTag(tagName, elem);
+  var res = [];
+  var re = new RegExp('(^|\\s)' + escapeRE(className) + '(\\s|$)');
+  for (var i = 0, l = elems.length; i < l; i++) {
+    if (re.test(elems[i].className)) {
+      res.push(elems[i]);
+    }
+  }
+  return res;
+}
+function geByClass1(className, elem, tagName) {
+  return geByClass(className, elem, tagName)[0];
+}
 function geByTag(tagName, elem) {
   return (elem || document).getElementsByTagName(tagName);
 }
 function geByTag1(tagName, elem) {
   return geByTag(tagName, elem)[0];
 }
+function hasClass(className, elem) {
+  if (elem = ge(elem)) {
+    return (new RegExp('(^|\\s)' + escapeRE(className) + '(\\s|$)')).test(elem.className);
+  }
+}
+function addClass(className, elem) {
+  if ((elem = ge(elem)) && !hasClass(className, elem)) {
+    elem.className = (elem.className ? elem.className + ' ' : '') + className;
+  }
+}
+function removeClass(className, elem) {
+  if (elem = ge(elem)) {
+    elem.className = (elem.className || '').replace(new RegExp('(^|\\s)' + escapeRE(className) + '(\\s|$)'), function(s, s1, s2){ return s1 && s2 ? ' ' : ''; });
+  }
+}
+function before(o, b) {
+  b = ge(b);
+  b.parentNode && b.parentNode.insertBefore(ge(o), b);
+}
 function remove(o) {
   o = ge(o);
-  if (o && o.parentNode) o.parentNode.removeChild(o);
+  o && o.parentNode && o.parentNode.removeChild(o);
+}
+function isSpecialClick(e) {
+  return e && (e.which > 1 || e.button > 1 || e.ctrlKey || e.shiftKey || e.metaKey);
 }
 function ce(tag, attr) {
   var el = document.createElement(tag);
@@ -215,13 +268,14 @@ function formatDate(timestamp, options) {
 }
 function makeReplyLink(text, reply_to_uid, reply_to_cid) {
   if (!reply_to_uid) return text;
-  return text ? text.toString().replace(new RegExp('^\\[(id' + intval(reply_to_uid) + ')\\|([^\\]]+)\\]'), '<a href="/$1#' + reply_to_cid + '" class="reply_to">$2</a>') : '';
+  return text ? text.toString().replace(new RegExp('^\\[id(' + intval(reply_to_uid) + ')\\|([^\\]]+)\\]'), '<a href="/' + app.user(reply_to_uid).screen_name + '" class="reply_to" onclick="return false;">$2</a>') : '';
 }
 function makeLinks(text) {
   if (!text) return '';
   text = text.toString();
   text = text.replace(/\[((?:id|club)[0-9]+)\|([^\]]+)\]/g, '<a href="/$1">$2</a>');
-  text = text.replace(/https?:\/\/[a-z0-9+\$_-]+(\.[a-z0-9+\$_-]+)*(\/[a-z0-9+\$_-][^\s]*)*(:[0-9]+)?\/?([a-z+&?\$_.-][a-z0-9;:@\/&?%=+\$_.-]*)?(#[a-z_.-][a-z0-9+\$_.-]*)?/i, function(s) {
+  //text = text.replace(/https?:\/\/[a-z0-9+\$_-]+(\.[a-z0-9+\$_-]+)*(\/[a-z0-9+\$_-][^\s]*)*(:[0-9]+)?\/?([a-z+&?\$_.-][a-z0-9;:@\/&?%=+\$_.-]*)?(#[a-z_.-][a-z0-9+\$_.-]*)?/i, function(s) {
+  text = text.replace(/\b(?:(?:https?):\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])/i, function(s) {
     return '<a href="' + s + '" target="_blank">' + (s.length > 55 ? s.substr(0, 52) + '...' : s) + '</a>';
   });
   return text;
@@ -302,7 +356,7 @@ var VK = (function() {
       }
       var cid = ++nextCallbackId;
       this._callbacks[cid] = function(data) {
-        console.dir(data);
+        console.log(cid + ': ', data);
         callback && callback(data);
         deleteCallback(cid);
       }
@@ -318,10 +372,11 @@ var VK = (function() {
 
 var app = (function() {
   var is_history = !!(window.history && history.pushState),
-      current_link = null;
-  function nav(link, e, no_push) {
-    if (e && (e.which > 1 || e.button > 1 || e.ctrlKey || e.shiftKey || e.metaKey)) return true;
-    if (!no_push && !is_history) return true;
+      current = {};
+  function nav(link, e, o) {
+    o = extend({no_push: false, push_only: false, replace: false}, o);
+    if (isSpecialClick(e)) return true;
+    if (!o.no_push && !is_history) return true;
     if (!link) return true;
     var push = link, path = '', params = {};
     if (typeof link !== 'string') {
@@ -334,25 +389,27 @@ var app = (function() {
       path = pp.shift();
       params = qs2obj(pp.join('?'));
     }
-    if (no_push && current_link == push) return false;
-    if (!no_push && current_link != push) {
+    if (o.no_push && current.link == push) return false;
+    if (!o.no_push && current.link != push) {
       try {
-        history.pushState(null, null, push);
+        o.replace ? history.replaceState(null, null, push) : history.pushState(null, null, push);
       } catch (e) { return true; }
     }
-    current_link = push;
-    return processLink(path, params);
+    current.link = push;
+    return o.push_only ? false : processLink(path, params, o.no_push);
   }
-  function processLink(path, params) {
+  function processLink(path, params, no_push) {
     var m;
     if (path == '/') {
-      app.openProfile(app.viewer_id);
+      app.openProfile(app.viewer_id, params, no_push);
     } else if (m = /^\/id([0-9]+)$/i.exec(path)) {
-      app.openProfile(m[1]);
+      app.openProfile(m[1], params, no_push);
     } else if (m = /^\/photos([0-9]+)$/i.exec(path)) {
-      app.openPhotos(m[1]);
+      app.openPhotos(m[1], params, no_push);
+    } else if (m = /^\/(photo([0-9]+)_[0-9]+)$/i.exec(path)) {
+      app.openPhotos(m[2], extend({z: m[1] + '/photos' + m[2]}, params), no_push);
     } else if (m = /^\/([a-z0-9_.]+)$/i.exec(path)) {
-      app.openProfile(m[1]);
+      app.openProfile(m[1], params, no_push);
     } else {
       return true;
     }
@@ -360,11 +417,11 @@ var app = (function() {
   }
   if (is_history) {
     window.addEventListener('popstate', function(e) {
-      nav(location, null, true);
+      nav(location, null, {no_push: true});
     }, false);
   }
   
-  var current_user_info, current_user_id, viewers_friends = null, usersMap = {};
+  var viewers_friends = null, usersMap = {};
   function saveViewersFriends(friends_uids) {
     viewers_friends = {};
     for (var i = 0; i < friends_uids.length; i++) {
@@ -428,16 +485,6 @@ var app = (function() {
         });
       }
     }
-    if (info.photos) {
-      var photos_cnt = info.photos.shift() || 0;
-      for (var i = 0, l = info.photos.length; i < l; i++) {
-        var photo = info.photos[i];
-        photos.push({
-          photo_link: '/photo' + photo.owner_id + '_' + photo.pid,
-          photo_src: photo.src
-        });
-      }
-    }
     var profile = getUser(info.user.uid),
         my_profile = app.viewer_id == profile.uid,
         npva = info.news_count || photos_cnt || profile.counters.videos || profile.counters.audios,
@@ -446,6 +493,19 @@ var app = (function() {
           showTime: false, shortDate: false, shortMonth: false,
           shortYear: profile.bd_year ? 0 : 10000, timeNow: false
         }) || '';
+    if (info.photos) {
+      var photos_cnt = info.photos.shift() || 0,
+          source_name = 'photos' + profile.uid;
+      photo.saveSource(source_name, info.photos, photos_cnt);
+      for (var i = 0, l = info.photos.length; i < l; i++) {
+        var p = info.photos[i], photo_id = p.owner_id + '_' + p.pid;
+        photos.push({
+          photo_link: '/photo' + photo_id,
+          photo_src: p.src,
+          onclick: 'return photo.open(\'' + photo_id + '\', \'' + source_name + '\', event);'
+        });
+      }
+    }
     return {
       my_profile: my_profile,
       user_firstname: profile.first_name,
@@ -455,7 +515,7 @@ var app = (function() {
       can_write_pm: profile.can_write_private_message && !my_profile,
       is_friend: isFriend(profile.uid),
       npva_counters_block: npva && !my_profile,
-      news_cnt: info.news_count && formatCnt(info.news_count),
+      news_cnt: profile.counters.news && formatCnt(profile.counters.news),
       photos_cnt: photos_cnt && formatCnt(photos_cnt),
       videos_cnt: profile.counters.videos && formatCnt(profile.counters.videos),
       audios_cnt: profile.counters.audios && formatCnt(profile.counters.audios),
@@ -477,70 +537,80 @@ var app = (function() {
       can_post: profile.can_post
     };
   }
-  function parseProfileInfo(wall) {
-    var posts = [];
-    if (wall.posts) {
-      saveUsers(wall.posts.profiles);
-      var posts_count = wall.posts.wall.shift() || 0;
-      for (var i = 0; i < wall.posts.wall.length; i++) {
-        var post = wall.posts.wall[i],
-            cmnts = wall.comments[i] || [],
-            from = getUser(post.from_id),
-            attachments = [],
-            comments_count = cmnts.shift() || 0,
-            comments = [];
-        if (post.attachments) {
-          for (var j = 0; j < post.attachments.length; j++) {
-            var media = post.attachments[j];
-            if (media.type == 'photo') {
-              attachments.push({
-                media_link: '/photo' + media.photo.owner_id + '_' + media.photo.pid,
-                media_src: media.photo.src
-              });
-            } else if (media.type == 'posted_photo') {
-              attachments.push({
-                media_link: '/photo' + media.posted_photo.owner_id + '_' + media.posted_photo.pid,
-                media_src: media.posted_photo.src
-              });
-            } else if (media.type == 'graffiti') {
-              attachments.push({
-                media_link: '/graffiti' + media.graffiti.owner_id + '_' + media.graffiti.gid,
-                media_src: media.graffiti.src
-              });
-            }
+  function parseProfileInfo(posts) {
+    var posts_data = [];
+    saveUsers(posts.profiles);
+    var posts_count = posts.wall.shift() || 0;
+    for (var i = 0; i < posts.wall.length; i++) {
+      if (!posts.wall[i] || !posts.wall[i].id) continue;
+      var post = posts.wall[i],
+          cmnts = post.comments || [],
+          from = getUser(post.from_id),
+          attachments = [],
+          comments_count = cmnts.shift() || 0,
+          comments = [];
+      if (post.attachments) {
+        var photo_attachments = [], source_name = 'wall' + post.to_id + '_' + post.id;
+        for (var j = 0; j < post.attachments.length; j++) {
+          var media = post.attachments[j];
+          if (media.type == 'photo') {
+            photo_attachments.push(media.photo);
+            var p = media.photo, photo_id = p.owner_id + '_' + p.pid;
+            attachments.push({
+              media_type: media.type,
+              media_link: '/photo' + photo_id,
+              media_src: media.photo.src,
+              onclick: 'return photo.open(\'' + photo_id + '\', \'' + source_name + '\', event);'
+            });
+          } else if (media.type == 'posted_photo') {
+            photo_attachments.push(media.posted_photo);
+            var p = media.posted_photo, photo_id = p.owner_id + '_' + p.pid;
+            attachments.push({
+              media_type: media.type,
+              media_link: '/photo' + photo_id,
+              media_src: media.photo.src,
+              onclick: 'return photo.open(\'' + photo_id + '\', \'' + source_name + '\', event);'
+            });
+          } else if (media.type == 'graffiti') {
+            attachments.push({
+              media_type: media.type,
+              media_link: '/graffiti' + media.graffiti.owner_id + '_' + media.graffiti.gid,
+              media_src: media.graffiti.src
+            });
           }
         }
-        for (var j = cmnts.length - 1; j >= 0; j--) {
-          var comment = cmnts[j],
-              user = getUser(comment.uid);
-          comments.push(extend({
-            user_link: '/' + user.screen_name,
-            user_photo: user.photo,
-            user_fullname: user.name,
-            text: prepareText(makeReplyLink(comment.text, comment.reply_to_uid, comment.reply_to_cid)),
-            post_date: formatDate(comment.date),
-            reply_to_link: comment.reply_to_cid ? '#' + comment.reply_to_cid : '',
-            reply_to_firstname: usersMap[comment.reply_to_uid] && usersMap[comment.reply_to_uid].first_name
-          }, comments_count <= 3 ? {i:1} : {}));
-        }
-        posts.push({
-          user_link: '/' + from.screen_name,
-          user_photo: from.photo,
-          user_fullname: from.name,
-          text: prepareText(post.text),
-          likes_count: post.likes.count,
-          post_date: formatDate(post.date),
-          show_attachments: attachments.length,
-          attachments: attachments,
-          show_comments: comments_count,
-          show_more_comments: comments_count > 3,
-          show_more_comments_label: 'Show all ' + comments_count + ' comments',
-          comments: comments
-        });
+        photo.saveSource(source_name, photo_attachments);
       }
+      for (var j = cmnts.length - 1; j >= 0; j--) {
+        var comment = cmnts[j],
+            user = getUser(comment.uid), reply_user = getUser(comment.reply_to_uid);
+        comments.push(extend({
+          user_link: '/' + user.screen_name,
+          user_photo: user.photo,
+          user_fullname: user.name,
+          text: prepareText(makeReplyLink(comment.text, comment.reply_to_uid, comment.reply_to_cid)),
+          post_date: formatDate(comment.date),
+          reply_to_link: comment.reply_to_uid ? '/' + reply_user.screen_name : '',
+          reply_to_firstname: comment.reply_to_uid ? reply_user.first_name : ''
+        }, comments_count <= 3 ? {i:1} : {}));
+      }
+      posts_data.push({
+        user_link: '/' + from.screen_name,
+        user_photo: from.photo,
+        user_fullname: from.name,
+        text: prepareText(post.text),
+        likes_count: post.likes.count,
+        post_date: formatDate(post.date),
+        show_attachments: attachments.length,
+        attachments: attachments,
+        show_comments: comments_count,
+        show_more_comments: comments_count > 3,
+        show_more_comments_label: 'Show all ' + comments_count + ' comments',
+        comments: comments
+      });
     }
     return {
-      posts: posts,
+      posts: posts_data,
       show_posts: posts_count > 0,
       show_more_posts: posts_count > 10
     };
@@ -548,12 +618,15 @@ var app = (function() {
   function parseAlbumInfo(album) {
     var photos = [];
     if (album.photos) {
-      var photos_cnt = album.photos.shift() || 0;
+      var photos_cnt = album.photos.shift() || 0,
+          source_name = 'photos' + current.user_id;
+      photo.saveSource(source_name, album.photos, photos_cnt);
       for (var i = 0, l = album.photos.length; i < l; i++) {
-        var photo = album.photos[i];
+        var p = album.photos[i], photo_id = p.owner_id + '_' + p.pid;
         photos.push({
-          photo_link: '/photo' + photo.owner_id + '_' + photo.pid,
-          photo_src: photo.src
+          photo_link: '/photo' + photo_id,
+          photo_src: p.src,
+          onclick: 'return photo.open(\'' + photo_id + '\', \'' + source_name + '\', event);'
         });
       }
     }
@@ -564,65 +637,160 @@ var app = (function() {
       show_more_photos: photos_cnt > 40
     };
   }
+  function parseZInfo(z) {
+    if (z) {
+      if (z.source_name.substr(0, 4) == 'wall') {
+        var source = [];
+        for (var i = 0, l = z.source.length; i < l; i++) {
+          z.source[i] && source.push(z.source[i]);
+        }
+        z.target && photo.save(z.target);
+        photo.saveSource(z.source_name, source);
+        photo.open(z.photo_id, z.source_name, null, true);
+      } else {
+        var source_length = +z.source.shift() || 0, sl = source_length - z.offset;
+        z.target && photo.save(z.target);
+        photo.saveSource(z.source_name, z.source.slice(0, sl), source_length, z.offset);
+        z.source_start.shift();
+        photo.saveSource(z.source_name, z.source_start, source_length);
+        photo.open(z.photo_id, z.source_name, null, true);
+      }
+    }
+  }
+  function parseZParams(params) {
+    if (params && params.z) {
+      var photo_params = /^photo(([0-9]+)_[0-9]+)(?:\/(.*))?$/i.exec(params.z);
+      if (photo_params) {
+        return {
+          photo_id: photo_params[1],
+          source_name: photo_params[3] || 'photos' + photo_params[2],
+          offset: Math.max(100, (params.n || 0) - 50)
+        };
+      }
+    }
+    return null;
+  }
+  function getZCodeData(params) {
+    if (params) {
+      if (params.source_name.substr(0, 4) == 'wall') {
+        return {z_wall: {
+          target_id: params.photo_id,
+          source_id: params.source_name.substr(4)
+        }};
+      } else {
+        return {z_all: {
+          target_id: params.photo_id,
+          owner_id: +params.source_name.substr(6),
+          offset: params.offset
+        }};
+      }
+    }
+    return {};
+  }
   
   return {
     viewer_id: VK.viewer_id,
     nav: nav,
+    current: current,
     user: getUser,
     scroll: function(to) {
       if (htmlNode) htmlNode.scrollTop = to || 0;
       if (bodyNode) bodyNode.scrollTop = to || 0;
     },
-    openProfile: function(user) {
-      if (current_user_info && current_user_id == getUser(user).uid) {
-        this.getProfileInfoOnly(user, function(html) {
+    openProfile: function(user, params, no_push) {
+      /*var uid = getUser(user).uid, z_params = parseZParams(params);
+      if (current.user_info && current.user_id == uid) {
+        if (z_params) {
+          return photo.open(z_params.photo_id, z_params.source_name, null, no_push);
+        } else {
+          photo.close(null, true);
+        }
+        this.getProfileInfoOnly(uid, function(html) {
+          if (app.current.link == '/') {
+            app.nav('/' + getUser(current.user_id).screen_name, null, {replace: true, push_only: true});
+          }
           onDOMReady(function() {
             ge('page_body').innerHTML = html;
+            removeClass('selected', 'photos_counter');
             app.scroll();
           });
         });
       } else {
-        this.getProfilePageInfo(user, function(html) {
+        this.getProfilePageInfo(user, function(html, z) {
+          if (app.current.link == '/') {
+            app.nav('/' + getUser(current.user_id).screen_name, null, {replace: true, push_only: true});
+          }
           onDOMReady(function() {
             ge('container').innerHTML = html;
+            removeClass('selected', 'photos_counter');
             app.scroll();
+            z && parseZInfo(z);
           });
-        });
+        }, z_params);
+      }*/
+      var uid = getUser(user).uid, z_params = parseZParams(params);
+      var part = (current.user_info && current.user_id == uid),
+          method = part ? this.getProfileInfoOnly : this.getProfilePageInfo;
+      if (z_params) {
+        return photo.open(z_params.photo_id, z_params.source_name, null, no_push);
+      } else {
+        photo.close(null, true);
       }
+      method.call(this, user, function(html, z) {
+        if (app.current.link == '/') {
+          app.nav('/' + getUser(current.user_id).screen_name, null, {replace: true, push_only: true});
+        }
+        onDOMReady(function() {
+          ge(part ? 'page_body' : 'container').innerHTML = html;
+          removeClass('selected', 'photos_counter');
+          app.scroll();
+          z && parseZInfo(z);
+        });
+      }, z_params);
     },
-    openPhotos: function(user) {
-      if (current_user_info && current_user_id == getUser(user).uid) {
-        this.getAlbumInfoOnly(user, function(html) {
+    openPhotos: function(user, params, no_push) {
+      var uid = getUser(user).uid, z_params = parseZParams(params);
+      if (current.user_info && current.user_id == uid) {
+        if (z_params) {
+          return photo.open(z_params.photo_id, z_params.source_name, null, no_push);
+        } else {
+          photo.close(null, true);
+        }
+        this.getAlbumInfoOnly(uid, function(html) {
           onDOMReady(function() {
             ge('page_body').innerHTML = html;
+            addClass('selected', 'photos_counter');
             app.scroll();
           });
         });
       } else {
-        this.getAlbumPageInfo(user, function(html) {
+        this.getAlbumPageInfo(user, function(html, z) {
           onDOMReady(function() {
             ge('container').innerHTML = html;
+            addClass('selected', 'photos_counter');
             app.scroll();
+            z && parseZInfo(z);
           });
-        });
+        }, z_params);
       }
     },
-    getProfilePageInfo: function(user, callback) {
-      var code = tpl.get(tpl.CODE_PROFILE_PAGE, {user: user, need_friends: !viewers_friends});
+    getProfilePageInfo: function(user, callback, params) {
+      var code = tpl.get(tpl.CODE_PROFILE_PAGE, extend({user: user, need_friends: !viewers_friends}, getZCodeData(params)));
       VK.api('execute', {code: code}, function(data) {
         if (!data.response) return; // ToDo: error msg 'api error'
-        if (!data.response.info.user) return; // ToDo: error msg 'user not found'
+        if (!data.response.info.user.uid) return; // ToDo: error msg 'user not found'
         var res = data.response,
             info = res.info,
-            wall = res.wall,
+            posts = res.posts,
             profiles = res.profiles;
         profiles && saveUsers(profiles);
-        current_user_id = info.user.uid;
-        var user_info = current_user_info = parseUserInfo(info);
-        var wall_info = parseProfileInfo(wall);
+        current.user_id = info.user.uid;
+        current.mode = 'profile';
+        var user_info = current.user_info = parseUserInfo(info);
+        var wall_info = parseProfileInfo(posts);
         var tpl_data = extend({profile_page: true}, user_info, wall_info);
         var html = tpl.get(tpl.UI_CONTAINER, tpl_data);
-        callback && callback(html);
+        callback && callback(html, extend(params, res.z));
       });
     },
     getProfileInfoOnly: function(user, callback) {
@@ -630,17 +798,18 @@ var app = (function() {
       VK.api('execute', {code: code}, function(data) {
         if (!data.response) return; // ToDo: error msg 'api error'
         var res = data.response,
-            wall = res.wall,
+            posts = res.posts,
             profiles = res.profiles;
         profiles && saveUsers(profiles);
-        var wall_info = parseProfileInfo(wall);
-        var tpl_data = extend(current_user_info, wall_info);
+        current.mode = 'profile';
+        var wall_info = parseProfileInfo(posts);
+        var tpl_data = extend(current.user_info, wall_info);
         var html = tpl.get(tpl.UI_PROFILE_BODY, tpl_data);
         callback && callback(html);
       });
     },
-    getAlbumPageInfo: function(user, callback) {
-      var code = tpl.get(tpl.CODE_ALBUM_PAGE, {user: user, need_friends: !viewers_friends});
+    getAlbumPageInfo: function(user, callback, params) {
+      var code = tpl.get(tpl.CODE_ALBUM_PAGE, extend({user: user, need_friends: !viewers_friends}, getZCodeData(params)));
       VK.api('execute', {code: code}, function(data) {
         if (!data.response) return; // ToDo: error msg 'api error'
         if (!data.response.info.user) return; // ToDo: error msg 'user not found'
@@ -649,12 +818,13 @@ var app = (function() {
             album = res.album,
             profiles = res.profiles;
         profiles && saveUsers(profiles);
-        current_user_id = info.user.uid;
-        var user_info = current_user_info = parseUserInfo(info);
+        current.user_id = info.user.uid;
+        current.mode = 'photos';
+        var user_info = current.user_info = parseUserInfo(info);
         var album_info = parseAlbumInfo(album);
         var tpl_data = extend({album_page: true}, user_info, album_info);
         var html = tpl.get(tpl.UI_CONTAINER, tpl_data);
-        callback && callback(html);
+        callback && callback(html, extend(params, res.z));
       });
     },
     getAlbumInfoOnly: function(user, callback) {
@@ -663,8 +833,9 @@ var app = (function() {
         if (!data.response) return; // ToDo: error msg 'api error'
         var res = data.response,
             album = res.album;
+        current.mode = 'photos';
         var album_info = parseAlbumInfo(album);
-        var tpl_data = extend(current_user_info, album_info);
+        var tpl_data = extend(current.user_info, album_info);
         var html = tpl.get(tpl.UI_ALBUM_BODY, tpl_data);
         callback && callback(html);
       });

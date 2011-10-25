@@ -1,28 +1,11 @@
 var ui_tpls = {
   UI_CONTAINER:
-'<div id="photo_bg"></div>' +
-'<div id="photo_view_layout">' +
-  '<div id="photo_view_container">' +
-    '<div id="photo_left" class="photo_nav"><div></div></div>' +
-    '<div id="photo_close" class="photo_nav"><div></div></div>' +
-    '<div id="photo_container" style="width: 792px;">' +
-      '<div class="photo_box" style="height: 530px;">' +
-        '<div class="photo_frame" style="width: 792px; height: 530px;">' +
-          '<div class="img"><img src="" /></div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="photos_summary"></div>' +
-      '<div class="photo_desc"></div>' +
-    '</div>' +
-  '</div>' +
-  '<div><!-- Opera margin-bottom fix --></div>' +
-'</div>' +
 '<div id="page_header_bg">' +
   '<div id="page_header">' +
-    '<div class="left_side">' +
+    '<a href="/" class="left_side" onclick="return app.nav(this, event);">' +
       '<div class="icon"></div>' +
       '<div class="title">{user_fullname}</div>' +
-    '</div>' +
+    '</a>' +
     '<div class="right_side">' +
       '<div class="top_search"><input id="header_search" type="text" value="Search..." /></div>' +
       '<ul class="top_links">' +
@@ -45,7 +28,7 @@ var ui_tpls = {
   ']}}' +
   '{npva_counters_block?{[<hr />]}}' +
   '{news_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">News</a><span>{news_cnt}</span></div></div>]}}' +
-  '{photos_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="{all_photos_link}" class="label" onclick="return app.nav(this, event);">Photos</a><span>{photos_cnt}</span></div></div>]}}' +
+  '{photos_cnt?{[<div id="photos_counter" class="profile_counter"><div class="counter_bg"><a href="{all_photos_link}" class="label" onclick="return app.nav(this, event);">Photos</a><span>{photos_cnt}</span></div></div>]}}' +
   '{videos_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">Videos</a><span>{videos_cnt}</span></div></div>]}}' +
   '{audios_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">Audio files</a><span>{audios_cnt}</span></div></div>]}}' +
   '{ff_counters_block?{[<hr />]}}' +
@@ -102,7 +85,7 @@ var ui_tpls = {
   '<a href="{user_link}" class="author" onclick="return app.nav(this, event);">{user_fullname}</a>' +
   '<div class="text">{text}</div>' +
   '{show_attachments?{[<div class="media_tiles clearfix">{attachments::UI_MEDIA_TILE}</div>]}}' +
-  '<div class="like_count">{likes_count}</div>' +
+  '{likes_count?{[<div class="like_count">{likes_count}</div>]}}' +
   '<div class="links"><span class="date">{post_date}</span></div>' +
   '{show_comments?{[' +
     '{show_more_comments?{[<div class="show_more comments"><a href="#" onclick="return false;">{show_more_comments_label}</a></div>]}}' +
@@ -118,7 +101,7 @@ var ui_tpls = {
   '<div class="post_column">' +
     '<a href="{user_link}" class="author" onclick="return app.nav(this, event);">{user_fullname}</a>' +
     '<div class="text">{text}</div>' +
-    '<div class="like_count">{likes_count}</div>' +
+    '{likes_count?{[<div class="like_count">{likes_count}</div>]}}' +
     '<div class="links">' +
       '<span class="date">{post_date}</span>' +
       '{reply_to_link?{[<span class="delim">-</span><a href="{reply_to_link}" class="reply_to" onclick="return false;">to {reply_to_firstname}</a>]}}' +
@@ -132,11 +115,29 @@ var ui_tpls = {
 '</div>',
   UI_PHOTO_TILE:
 '<div class="photo_tile">' +
-  '<a href="{photo_link}"onclick="return app.nav(this, event);"><img src="{photo_src}" /></a>' +
+  '<a href="{photo_link}"{onclick?{[ onclick="{onclick}"]}}><img src="{photo_src}" /></a>' +
 '</div>',
   UI_MEDIA_TILE:
-'<div class="media_tile">' +
-  '<a href="{media_link}"onclick="return app.nav(this, event);"><img src="{media_src}" /></a>' +
+'<div class="media_tile {media_type}">' +
+  '<a href="{media_link}"{onclick?{[ onclick="{onclick}"]}}><img src="{media_src}" /></a>' +
+'</div>',
+  UI_PHOTO_VIEW:
+'<div id="pv_bg"></div>' +
+'<div id="pv_layout">' +
+  '<div id="pv_container">' +
+    '<div class="photo_nav left" onclick="photo.prev();"><div></div></div>' +
+    '<div class="photo_nav close" onclick="photo.close();"><div></div></div>' +
+    '<div id="photo_container" class="clearfix">' +
+      '<a class="photo_box" onclick="return photo.next(event);">' +
+        '<div class="photo_frame">' +
+          '<div class="img"><img alt="" /></div>' +
+        '</div>' +
+      '</a>' +
+      '<div class="photos_summary"></div>' +
+      '<div class="photo_desc"></div>' +
+    '</div>' +
+  '</div>' +
+  '<div><!-- Opera margin-bottom fix --></div>' +
 '</div>'
 };
 
@@ -146,11 +147,10 @@ var code_tpls = {
 'u=API.users.get({uid:"{user}",fields:"photo,screen_name,photo_big,activity,bdate,relation,counters,can_post,can_write_private_message"})[0],' +
 'i=u.uid,' +
 'uf=API.subscriptions.getFollowers({uid:i,count:3}),' +
-'uu=uf.users[0]+","+uf.users[1]+","+uf.users[2],' +
+'uu=uf.users,' +
 'ru={' +
-  'user:u,' +
+  'user:u+{counters:u.counters+{news:API.wall.get({owner_id:i,count:1,filter:"owner"})[0]}},' +
   '{need_friends?{[{CODE_PROFILE_FRIENDS}]}}' +
-  'news_count:API.wall.get({owner_id:i,count:1,filter:"owner"})[0],' +
   'photos:API.photos.getAll({owner_id:i,count:4}),' +
   'friends:API.friends.get({uid:i,fields:"photo,screen_name",count:18}),' +
   'followers:uf' +
@@ -159,77 +159,92 @@ var code_tpls = {
 'var ' +
 'pp=API.wall.get({owner_id:i,count:10,extended:1}),' +
 'w=pp.wall,' +
-'c=[' +
-  'API.wall.getComments({owner_id:i,post_id:w[1].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[2].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[3].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[4].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[5].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[6].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[7].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[8].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[9].id,sort:"desc",count:3}),' +
-  'API.wall.getComments({owner_id:i,post_id:w[10].id,sort:"desc",count:3})' +
-'],' +
+'rp=pp+{wall:[' +
+  'w[0],' +
+  'w[1]+{comments: API.wall.getComments({owner_id:i,post_id:w[1].id,sort:"desc",count:3})},' +
+  'w[2]+{comments: API.wall.getComments({owner_id:i,post_id:w[2].id,sort:"desc",count:3})},' +
+  'w[3]+{comments: API.wall.getComments({owner_id:i,post_id:w[3].id,sort:"desc",count:3})},' +
+  'w[4]+{comments: API.wall.getComments({owner_id:i,post_id:w[4].id,sort:"desc",count:3})},' +
+  'w[5]+{comments: API.wall.getComments({owner_id:i,post_id:w[5].id,sort:"desc",count:3})},' +
+  'w[6]+{comments: API.wall.getComments({owner_id:i,post_id:w[6].id,sort:"desc",count:3})},' +
+  'w[7]+{comments: API.wall.getComments({owner_id:i,post_id:w[7].id,sort:"desc",count:3})},' +
+  'w[8]+{comments: API.wall.getComments({owner_id:i,post_id:w[8].id,sort:"desc",count:3})},' +
+  'w[9]+{comments: API.wall.getComments({owner_id:i,post_id:w[9].id,sort:"desc",count:3})},' +
+  'w[10]+{comments: API.wall.getComments({owner_id:i,post_id:w[10].id,sort:"desc",count:3})}' +
+']},' +
+'c=rp.wall@.comments,' +
 'pu=' +
-  'c[0][1].uid+","+c[0][2].uid+","+c[0][3].uid+","+' +
-  'c[1][1].uid+","+c[1][2].uid+","+c[1][3].uid+","+' +
-  'c[2][1].uid+","+c[2][2].uid+","+c[2][3].uid+","+' +
-  'c[3][1].uid+","+c[3][2].uid+","+c[3][3].uid+","+' +
-  'c[4][1].uid+","+c[4][2].uid+","+c[4][3].uid+","+' +
-  'c[5][1].uid+","+c[5][2].uid+","+c[5][3].uid+","+' +
-  'c[6][1].uid+","+c[6][2].uid+","+c[6][3].uid+","+' +
-  'c[7][1].uid+","+c[7][2].uid+","+c[7][3].uid+","+' +
-  'c[8][1].uid+","+c[8][2].uid+","+c[8][3].uid+","+' +
-  'c[9][1].uid+","+c[9][2].uid+","+c[9][3].uid+","+' +
-  'c[0][1].reply_to_uid+","+c[0][2].reply_to_uid+","+' +
-  'c[0][3].reply_to_uid+","+c[1][1].reply_to_uid+","+' +
-  'c[1][2].reply_to_uid+","+c[1][3].reply_to_uid+","+' +
-  'c[2][1].reply_to_uid+","+c[2][2].reply_to_uid+","+' +
-  'c[2][3].reply_to_uid+","+c[3][1].reply_to_uid+","+' +
-  'c[3][2].reply_to_uid+","+c[3][3].reply_to_uid+","+' +
-  'c[4][1].reply_to_uid+","+c[4][2].reply_to_uid+","+' +
-  'c[4][3].reply_to_uid+","+c[5][1].reply_to_uid+","+' +
-  'c[5][2].reply_to_uid+","+c[5][3].reply_to_uid+","+' +
-  'c[6][1].reply_to_uid+","+c[6][2].reply_to_uid+","+' +
-  'c[6][3].reply_to_uid+","+c[7][1].reply_to_uid+","+' +
-  'c[7][2].reply_to_uid+","+c[7][3].reply_to_uid+","+' +
-  'c[8][1].reply_to_uid+","+c[8][2].reply_to_uid+","+' +
-  'c[8][3].reply_to_uid+","+c[9][1].reply_to_uid+","+' +
-  'c[9][2].reply_to_uid+","+c[9][3].reply_to_uid,' +
-'rp={' +
-  'posts:pp,' +
-  'comments:c' +
-'};',
+  'c[1]@.uid+c[2]@.uid+c[3]@.uid+c[4]@.uid+c[5]@.uid+' +
+  'c[6]@.uid+c[7]@.uid+c[8]@.uid+c[9]@.uid+c[10]@.uid+' +
+  'c[1]@.reply_to_uid+c[2]@.reply_to_uid+' +
+  'c[3]@.reply_to_uid+c[4]@.reply_to_uid+' +
+  'c[5]@.reply_to_uid+c[6]@.reply_to_uid+' +
+  'c[7]@.reply_to_uid+c[8]@.reply_to_uid+' +
+  'c[9]@.reply_to_uid+c[10]@.reply_to_uid;',
   CODE_ALBUM_INFO_VARS:
 'var ' +
 'ra={' +
   'albums_count:API.getProfiles({uid:i,fields:"counters"})[0].counters.albums,' +
-  'photos:API.photos.getAll({owner_id:i,count:80})' +
+  'photos:API.photos.getAll({owner_id:i,count:40})' +
 '};',
+  CODE_Z_ALL_VARS:
+'var ' +
+'tp=API.photos.getById({photos:"{target_id}"})[0],' +
+'p1=API.photos.getAll({owner_id:"{owner_id}",offset:"{offset}",count:100}),' +
+'p2=API.photos.getAll({owner_id:"{owner_id}",count:100}),' +
+'rz={z:{' +
+  'target:tp,' +
+  'source:p1,' +
+  'source_start:p2' +
+'}};',
+  CODE_PHOTOS_GET_FROM_ALL:
+'var ' +
+'a1=API.photos.getAll({owner_id:"{owner_id}",offset:"{offset1}",count:"{count1}"}),' +
+'a2=API.photos.getAll({owner_id:"{owner_id}",offset:"{offset2}",count:"{count2}"}),' +
+'p1=API.photos.getById({photos:[""{arr1::CODE_PHOTO_ID_1}]}),' +
+'p2=API.photos.getById({photos:[""{arr2::CODE_PHOTO_ID_2}]});' +
+'return{photos1:p1,photos2:p2};',
+  CODE_PHOTO_ID_1:
+',a1[{i}].owner_id+"_"+a1[{i}].pid',
+  CODE_PHOTO_ID_2:
+',a2[{i}].owner_id+"_"+a2[{i}].pid',
+  CODE_PHOTOS_GET_FROM_WALL:
+'return API.photos.getById({photos:"{photos}"});',
+  CODE_Z_WALL_VARS:
+'var ' +
+'tp=API.photos.getById({photos:"{target_id}"})[0],' +
+'wp=API.wall.getById({posts:"{source_id}"})[0].attachments,' +
+'rz={z:{' +
+  'target:tp,' +
+  'source:wp@.photo+wp@.posted_photo' +
+'}};',
   CODE_PROFILE_PAGE:
 '{CODE_USER_INFO_VARS}' +
 '{CODE_PROFILE_INFO_VARS}' +
+'{z_wall?{[{z_wall::CODE_Z_WALL_VARS}]}}' +
+'{z_all?{[{z_all::CODE_Z_ALL_VARS}]}}' +
 'return{' +
   'info:ru,' +
-  'wall:rp,' +
-  'profiles:API.users.get({uids:uu+","+pu,fields:"photo,screen_name"})' +
-'};',
+  'posts:rp,' +
+  'profiles:API.users.get({uids:uu+pu,fields:"photo,screen_name"})' +
+'}{z_wall?{[+rz]}}{z_all?{[+rz]}};',
   CODE_PROFILE_INFO_ONLY:
 'var i="{user_id}";' +
 '{CODE_PROFILE_INFO_VARS}' +
 'return{' +
-  'wall:rp,' +
+  'posts:rp,' +
   'profiles:API.users.get({uids:pu,fields:"photo,screen_name"})' +
 '};',
   CODE_ALBUM_PAGE:
 '{CODE_USER_INFO_VARS}' +
 '{CODE_ALBUM_INFO_VARS}' +
+'{z_wall?{[{z_wall::CODE_Z_WALL_VARS}]}}' +
+'{z_all?{[{z_all::CODE_Z_ALL_VARS}]}}' +
 'return{' +
   'info:ru,' +
   'album:ra,' +
   'profiles:API.users.get({uids:uu,fields:"photo,screen_name"})' +
-'};',
+'}{z_wall?{[+rz]}}{z_all?{[+rz]}};',
   CODE_ALBUM_INFO_ONLY:
 'var i="{user_id}";' +
 '{CODE_ALBUM_INFO_VARS}' +
@@ -251,9 +266,10 @@ var tpl = (function() {
     return val.toString().replace(/@@(\d+)@@/g, function(s, i) { return escapeChars.charAt(i); });
   }
   function ref(data, s, data_key, value_tpl, if_value, else_value) {
-    var value = data[data_key] || '';
+    var value = (typeof data[data_key] === 'undefined') ? '' : data[data_key];
     if (value_tpl) return escapeVal(this.get(value_tpl, value, true));
     if (if_value || else_value) return (value ? if_value : else_value) || '';
+    if (typeof value === 'number') return value;
     return escapeVal(value) || this[data_key] && escapeVal(this.get(data_key, data, true)) || '';
   }
   function get_ref(data) {

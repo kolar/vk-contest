@@ -37,17 +37,17 @@
       </div>
     </div>
     
-    <div id="photo_bg"></div>
-    <div id="photo_view_layout">
-      <div id="photo_view_container">
-        <div id="photo_left" class="photo_nav" onclick="console.log('left');"><div></div></div>
-        <div id="photo_close" class="photo_nav" onclick="console.log('close');"><div></div></div>
+    <div id="pv_bg"></div>
+    <div id="pv_layout">
+      <div id="pv_container">
+        <div class="photo_nav left" onclick="console.log('prev');"><div></div></div>
+        <div class="photo_nav close" onclick="console.log('close');"><div></div></div>
         <div id="photo_container" style="width: 792px;">
-          <div class="photo_box" style="height: 530px;">
+          <a href="#" class="photo_box" onclick="console.log('next'); return false;" style="height: 530px;">
             <div class="photo_frame" style="width: 792px; height: 530px;">
               <div class="img"><img src="http://digitaljournalist.org/issue0712/images/walker/062b.jpg" /></div>
             </div>
-          </div>
+          </a>
           <div class="photos_summary">Photo 2 of 17</div>
           <div class="photo_desc">
             "This was a very typical time. I was single. All you needed was a cup of tea, a light, and your 
