@@ -59,7 +59,7 @@ var ui_tpls = {
   '<div class="content_header">{can_post?{[<div class="post_field"><textarea>Write a public message...</textarea></div>]}:{[<h4>Wall</h4>]}}</div>' +
   '<div class="wall_posts">' +
     '{posts::UI_WALL_POST}' +
-    '{show_more_posts?{[<div class="show_more posts"><a href="#" onclick="return false;">previous posts</a></div>]}}' +
+    '{show_more_posts?{[<div class="show_more posts"><a href="" onclick="return app.showMorePosts();">previous posts</a></div>]}}' +
   '</div>' +
 ']}}</div>',
   UI_ALBUM_BODY:
@@ -171,7 +171,7 @@ var code_tpls = {
 '};',
   CODE_PROFILE_INFO_VARS:
 'var ' +
-'pp=API.wall.get({owner_id:i,count:10,extended:1}),' +
+'pp=API.wall.get({owner_id:i,offset:{posts_offset?{["{posts_offset}"]}:{[0]}},count:10,extended:1}),' +
 'w=pp.wall,' +
 'pw=[' +
   'w[0],' +

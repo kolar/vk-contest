@@ -451,6 +451,11 @@ button::-moz-focus-inner {
   color: #999;
   text-shadow: #fff 0 1px 0;
 }
+.page_content .show_more a span {
+  display: block;
+  height: 13px;
+  background: url(upload.gif) no-repeat center;
+}
 .page_content .show_more a:hover {
   text-decoration: none;
 }

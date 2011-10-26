@@ -558,11 +558,12 @@ var app = (function() {
       can_post: profile.can_post
     };
   }
-  function parseProfileInfo(posts) {
+  function parseProfileInfo(posts, offset) {
     var posts_data = [];
     saveUsers(posts.profiles);
     saveUsers(posts.dat_profiles, 'dat');
     var posts_count = posts.wall.shift() || 0;
+    if (!offset) current.wall_posts_shown = 10;
     for (var i = 0; i < posts.wall.length; i++) {
       if (!posts.wall[i] || !posts.wall[i].id) continue;
       var post = posts.wall[i],
@@ -629,7 +630,7 @@ var app = (function() {
           reply_to_firstname: comment.reply_to_uid ? reply_text : ''
         }, comments_count <= 3 ? {i:1} : {}));
       }
-      posts_data.push({
+      posts_data.push(extend({
         post_id: post.id,
         user_link: '/' + from.screen_name,
         user_photo: from.photo,
@@ -645,10 +646,11 @@ var app = (function() {
         show: true,
         show_more_comments_label: comments_count > 100 ? 'last 100 replies of ' + comments_count : 'all ' + comments_count + ' replies',
         comments: comments
-      });
+      }, offset ? {i: 1} : {}));
     }
     return {
       posts: posts_data,
+      posts_count: posts_count,
       show_posts: posts_count > 0,
       show_more_posts: posts_count > 10
     };
@@ -728,7 +730,7 @@ var app = (function() {
     return {};
   }
   
-  var ap_in_process = false, ap_need_more = false;
+  var ap_in_process = false, ap_need_more = false, wp_in_progress = false;
   function preloadAlbum() {
     if (ap_in_process) return;
     var tpl_data = {owner_id: current.user_id, offset: 0}, need = false;
@@ -920,6 +922,7 @@ var app = (function() {
     },
     shComments: function(a, post_id, show) {
       var sm_cont = a.parentNode, comments_cont = geByClass1('post_comments', sm_cont.parentNode);
+      a && (a.innerHTML = '<span></span>');
       var code = tpl.get(tpl.CODE_COMMENTS, {owner_id: current.user_id, post_id: post_id, all: show});
       VK.api('execute', {code: code}, function(data) {
         if (!data.response) return; // ToDo: error msg 'api error'
@@ -958,7 +961,7 @@ var app = (function() {
       });
       return false;
     },
-    showMorePhotos: function(a) {
+    showMorePhotos: function() {
       preloadAlbum();
       var src_name = 'photos' + current.user_id,
           src = photo.getSource(src_name),
@@ -980,11 +983,37 @@ var app = (function() {
         var pf = cdf(tpl.get(tpl.UI_PHOTO_TILE, photos));
         geByClass1('photos_tiles', 'album_page').appendChild(pf);
         if (current.album_photos_shown >= src.length) {
-          remove(a || geByClass1('show_more photos', 'album_page'));
+          remove(geByClass1('show_more photos', 'album_page'));
         }
       } else {
         ap_need_more = true;
       }
+      return false;
+    },
+    showMorePosts: function() {
+      if (wp_in_progress) return;
+      wp_in_progress = true;
+      var sm_posts = geByClass1('show_more posts', 'profile_page'),
+          a = geByTag1('a', sm_posts);
+      a && (a.innerHTML = '<span></span>');
+      var code = tpl.get(tpl.CODE_PROFILE_INFO_ONLY, {user_id: current.user_id, posts_offset: current.wall_posts_shown});
+      VK.api('execute', {code: code}, function(data) {
+        wp_in_progress = false;
+        a && (a.innerHTML = 'previous posts');
+        if (!data.response) return; // ToDo: error msg 'api error'
+        var res = data.response,
+            posts = res.posts,
+            profiles = res.profiles;
+        profiles && saveUsers(profiles);
+        var wall_info = parseProfileInfo(posts, current.wall_posts_shown);
+        current.wall_posts_shown += 10;
+        var pf = cdf(tpl.get(tpl.UI_WALL_POST, wall_info.posts)),
+            wall_posts = geByClass1('wall_posts', 'profile_page');
+        sm_posts ? before(pf, sm_posts) : wall_posts.appendChild(pf);
+        if (current.album_photos_shown >= wall_info.posts_count) {
+          remove(sm_posts);
+        }
+      });
       return false;
     }
   };
