@@ -1,0 +1,86 @@
+#masks_wrapper {
+  z-index: 10000;
+}
+.contest_mask {
+  opacity: 0;
+  margin: 0 150px;
+}
+#masks_wrapper, .contest_mask {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+}
+#masks_wrapper.off .contest_mask {
+  display: none;
+}
+#masks_wrapper.off  {
+  top: auto; left: auto; right: auto;
+}
+.contest_mask.off {
+  opacity: 0;
+}
+.contest_mask.half {
+  opacity: 0.4;
+}
+.contest_mask.on {
+  opacity: 1;
+}
+
+#masks_pults {
+  position: fixed;
+  float: left;
+  background-color: #f7f7f7;
+  padding: 3px 10px 10px 5px;
+  font-size: 16px;
+  margin-top: 150px;
+}
+#masks_pults .pult {
+  margin: 7px 0 0 5px;
+  clear: left;
+  height: 22px;
+}
+#masks_pults .pult .label {
+  font-family: Trebuchet MS;
+  float: left;
+  margin: 0 5px;
+}
+#masks_pults .pult .btn {
+  width: 12px; height: 12px;
+  margin: 2px 0 2px 2px;
+  border: 5px solid #f7f7f7;
+  border-radius: 12px;
+  background-color: #777;
+  float: left;
+  cursor: pointer;
+}
+#masks_pults .pult .btn.off {
+  opacity: 0.1;
+}
+#masks_pults .pult .btn.half {
+  opacity: 0.3;
+}
+#masks_pults .pult .btn.on {
+  opacity: 1;
+}
+#mask1 {
+  background: url(profile.png) no-repeat center top;
+  height: 962px;
+}
+#mask2 {
+  background: url(album.png) no-repeat center top;
+  height: 816px;
+}
+#mask3 {
+  background: url(photo.png) no-repeat center top;
+  height: 828px;
+}
+
+#mask1, #mask2, #mask3 {
+  background-position: 146px top;
+}
+#page_header,
+#content {
+  margin: 0 0 0 500px;
+}
+#photo_container {
+  margin: 0 0 0 515px;
+}

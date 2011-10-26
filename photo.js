@@ -1,6 +1,5 @@
 var photo = (function() {
-  var BLANK_IMG = 'http://vkontakte.ru/images/blank.gif';
-  var LOADING_IMG = 'http://vkontakte.ru/images/upload_inv_mono.gif';
+  var LOADING_IMG = '/upload_inv_mono.gif';
   var IMG_CACHE_SIZE = 3;
   var pvl, pvc, pc, pb, pf, pimg, pi, ps, pd;
   function pvInit() {
@@ -60,7 +59,6 @@ var photo = (function() {
       var endLength = offset < 0 ? -offset : source.length - offset,
           startLength = data.length - endLength;
       Array.prototype.splice.apply(source, [offset, endLength].concat(data.slice(0, endLength)));
-      //Array.prototype.splice.apply(source, [0, startLength].concat(data.slice(-startLength)));
     } else {
       Array.prototype.splice.apply(source, [offset, data.length].concat(data));
     }
@@ -97,6 +95,7 @@ var photo = (function() {
       pi.src = LOADING_IMG;
       return;
     }
+    pvl.scrollTop = 0;
     var photo_link = 'photo' + p.id, photo_src = p.src_xxbig || p.src_xbig || p.src_big;
     pb.href = '/' + photo_link;
     if (pi && pi.src != photo_src) {
@@ -211,11 +210,14 @@ var photo = (function() {
   }
   function show() {
     if (!pvc) return;
-    bodyNode.className = 'photo_view';
+    addClass('photo_view', htmlNode);
+    onBodyResize(true);
+    (current.one ? addClass : removeClass)('one_photo', pvc);
   }
   function hide(no_push) {
     if (!pvc) return;
-    bodyNode.className = '';
+    removeClass('photo_view', htmlNode);
+    addClass('one_photo', pvc);
     var return_url = app.current.mode == 'profile' ?
       '/' + app.user(app.current.user_id).screen_name :
       '/photos' + app.current.user_id;
@@ -237,9 +239,9 @@ var photo = (function() {
       current.all = false;
       current.num = getNum(p, current.source);
       var no_photo = p != current.source[current.num].id;
-      pvc.className = current.one ? 'one_photo' : '';
       setPhoto(current.num, no_push && !no_photo, no_photo);
       show();
+      pvl.scrollTop = 0;
       return false;
     },
     prev: function(event) {

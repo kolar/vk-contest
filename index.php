@@ -22,7 +22,7 @@ if (!IS_AUTH) {
     <link type="text/css" rel="stylesheet" href="style.css">
     <script type="text/javascript">app.nav(location, null, {no_push: true});</script>
   </head>
-  <body>
+  <body onresize="onBodyResize(true);">
     <script type="text/javascript">onHeadReady(true);</script>
     <div id="container"></div>
   </body>

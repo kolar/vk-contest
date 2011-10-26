@@ -4,7 +4,7 @@ var ui_tpls = {
   '<div id="page_header">' +
     '<a href="/" class="left_side" onclick="return app.nav(this, event);">' +
       '<div class="icon"></div>' +
-      '<div class="title">{user_fullname}</div>' +
+      '<div class="title">{viewer_fullname}</div>' +
     '</a>' +
     '<div class="right_side">' +
       '<div class="top_search"><input id="header_search" type="text" value="Search..." /></div>' +
@@ -74,7 +74,7 @@ var ui_tpls = {
   '<div class="photos_tiles clearfix">' +
     '{all_photos::UI_PHOTO_TILE}' +
   '</div>' +
-  '{show_more_photos?{[<div class="show_more photos"><a href="#" onclick="return false;">show more photos</a></div>]}}' +
+  '{show_more_photos?{[<div class="show_more photos"><a href="" onclick="return app.showMorePhotos();">show more photos</a></div>]}}' +
 '</div>',
   UI_WALL_POST:
 '<div class="wall_post{i:{[ first]}}">' +
@@ -84,7 +84,7 @@ var ui_tpls = {
   '<div class="post_column">' +
   '<a href="{user_link}" class="author" onclick="return app.nav(this, event);">{user_fullname}</a>' +
   '<div class="text">{text}</div>' +
-  '{show_attachments?{[<div class="media_tiles clearfix">{attachments::UI_MEDIA_TILE}</div>]}}' +
+  '{show_attachments?{[<div class="media_tiles{one_media?{[ one_media]}} clearfix">{attachments::UI_MEDIA_TILE}</div>]}}' +
   '{likes_count?{[<div class="like_count">{likes_count}</div>]}}' +
   '<div class="links"><span class="date">{post_date}</span></div>' +
   '{show_comments?{[' +
@@ -147,6 +147,15 @@ var ui_tpls = {
 };
 
 var code_tpls = {
+  CODE_VIEWER_INFO_VARS:
+'var ' +
+'vi=API.getViewerId(),' +
+'vf=API.friends.get({uid:vi}),' +
+'vp=API.users.get({uid:vi,fields:"screen_name"})[0],' +
+'rv={' +
+  'profile:vp,' +
+  'friends:vf' +
+'};',
   CODE_USER_INFO_VARS:
 'var ' +
 'u=API.users.get({uid:"{user}",fields:"photo,screen_name,photo_big,activity,bdate,relation,counters,can_post,can_write_private_message"})[0],' +
@@ -191,7 +200,7 @@ var code_tpls = {
 'var ' +
 'ra={' +
   'albums_count:API.users.get({uid:i,fields:"counters"})[0].counters.albums,' +
-  'photos:API.photos.getAll({owner_id:i,count:40})' +
+  'photos:API.photos.getAll({owner_id:i,count:100})' +
 '};',
   CODE_Z_ALL_VARS:
 'var ' +
@@ -225,6 +234,7 @@ var code_tpls = {
   'source:wp@.photo+wp@.posted_photo' +
 '}};',
   CODE_PROFILE_PAGE:
+'{need_viewer?{[{CODE_VIEWER_INFO_VARS}]}}' +
 '{CODE_USER_INFO_VARS}' +
 '{CODE_PROFILE_INFO_VARS}' +
 '{z_wall?{[{z_wall::CODE_Z_WALL_VARS}]}}' +
@@ -233,6 +243,7 @@ var code_tpls = {
   'info:ru,' +
   'posts:rp,' +
   'profiles:API.users.get({uids:uu+pu,fields:"photo,screen_name"})' +
+  '{need_viewer?{[,viewer:rv]}}' +
 '}{z_wall?{[+rz]}}{z_all?{[+rz]}};',
   CODE_PROFILE_INFO_ONLY:
 'var i="{user_id}";' +
@@ -242,6 +253,7 @@ var code_tpls = {
   'profiles:API.users.get({uids:pu,fields:"photo,screen_name"})' +
 '};',
   CODE_ALBUM_PAGE:
+'{need_viewer?{[{CODE_VIEWER_INFO_VARS}]}}' +
 '{CODE_USER_INFO_VARS}' +
 '{CODE_ALBUM_INFO_VARS}' +
 '{z_wall?{[{z_wall::CODE_Z_WALL_VARS}]}}' +
@@ -250,6 +262,7 @@ var code_tpls = {
   'info:ru,' +
   'album:ra,' +
   'profiles:API.users.get({uids:uu,fields:"photo,screen_name"})' +
+  '{need_viewer?{[,viewer:rv]}}' +
 '}{z_wall?{[+rz]}}{z_all?{[+rz]}};',
   CODE_ALBUM_INFO_ONLY:
 'var i="{user_id}";' +
@@ -264,6 +277,8 @@ var code_tpls = {
 'profiles:API.users.get({uids:c@.uid,fields:"photo,screen_name"}),' +
 'dat_profiles:API.users.get({uids:[1]+c@.reply_to_uid,fields:"screen_name",name_case:"dat"})' +
 '};',
+  CODE_ALBUM_PHOTOS:
+'return API.photos.getAll({owner_id:{owner_id},offset:{offset},count:100});',
   CODE_PROFILE_FRIENDS:
 'friends_uids:API.friends.get({uid:API.getViewerId()}),'
 };

@@ -1,44 +1,5 @@
-var fixMask = false;
-function maskOn(num, mode, over) {
-  if (fixMask && over) return;
-  if (!over) fixMask = true;
-  ge('mask1').className = 'contest_mask ' + (num == 1 ? mode : 'off');
-  ge('mask2').className = 'contest_mask ' + (num == 2 ? mode : 'off');
-  ge('mask3').className = 'contest_mask ' + (num == 3 ? mode : 'off');
-  ge('masks_wrapper').className = '';
-}
-function maskOff(out) {
-  if (fixMask && out) return;
-  ge('masks_wrapper').className = 'off';
-  fixMask = false;
-}
-/************************************************************************************/
-
 (function(window){
-  var readyBound = false, bindReady = function() {
-    if (readyBound) return;
-    readyBound = true;
-    if (document.addEventListener) {
-      document.addEventListener('DOMContentLoaded', function() {
-        document.removeEventListener('DOMContentLoaded', arguments.callee, false);
-        ready();
-      }, false );
-    } else if (document.attachEvent) {
-      document.attachEvent('onreadystatechange', function() {
-        if (document.readyState === 'complete') {
-          document.detachEvent('onreadystatechange', arguments.callee);
-          ready();
-        }
-      });
-    }
-    if (window.addEventListener) {
-      window.addEventListener('load', ready, false);
-    } else if (window.attachEvent) {
-      window.attachEvent('onload', ready);
-    } else {
-      window.onload = ready;
-    }
-  }, isReady = false, readyList = [], ready = function() {
+  var readyBound = false, isReady = false, readyList = [], ready = function() {
     if (!isReady) {
       isReady = true;
       window.htmlNode = geByTag1('html');
@@ -52,8 +13,27 @@ function maskOff(out) {
       }
     }
   };
+  if (document.addEventListener) {
+    document.addEventListener('DOMContentLoaded', function() {
+      document.removeEventListener('DOMContentLoaded', arguments.callee, false);
+      ready();
+    }, false );
+  } else if (document.attachEvent) {
+    document.attachEvent('onreadystatechange', function() {
+      if (document.readyState === 'complete') {
+        document.detachEvent('onreadystatechange', arguments.callee);
+        ready();
+      }
+    });
+  }
+  if (window.addEventListener) {
+    window.addEventListener('load', ready, false);
+  } else if (window.attachEvent) {
+    window.attachEvent('onload', ready);
+  } else {
+    window.onload = ready;
+  }
   function onDOMReady(fn) {
-    bindReady();
     if (isReady) {
       fn.call(document);
     } else {
@@ -63,34 +43,72 @@ function maskOff(out) {
   window.onDOMReady = onDOMReady;
 })(window);
 
-(function(window){
-  var isReady = false, readyList = [];
-  function onHeadReady(fn) {
+function getValues(val) {
+  if (!isArray(val)) return val.call ? val() : val;
+  var return_val = [];
+  for (var i = 0, l = val.length; i < l; i++) {
+    return_val.push(getValues(val[i]));
+  }
+  return return_val;
+}
+function se() {
+  var callbacksList = [], args = Array.prototype.slice.call(arguments);
+  return function(fn) {
     if (!fn) return;
-    var head = geByTag1('head');
-    if (fn.call) {
+    if (fn.apply) {
+      callbacksList.push(fn);
+    } else {
+      for (var i = 0, l = callbacksList.length; i < l; i++) {
+        callbacksList[i].apply(window, getValues(args));
+      }
+    }
+  }
+}
+function se1() {
+  var isReady = false, readyList = [], args = Array.prototype.slice.call(arguments);
+  return function(fn) {
+    if (!fn) return;
+    if (fn.apply) {
       if (isReady) {
-        fn.call(document, head);
+        fn.apply(window, getValues(args));
       } else {
         readyList.push(fn);
       }
-    } else if (head) {
+    } else {
       isReady = true;
       for (var i = 0, l = readyList.length; i < l; i++) {
-        readyList[i].call(document, head);
+        readyList[i].apply(window, getValues(args));
       }
       readyList = null;
     }
-  };
-  window.onHeadReady = onHeadReady;
-})(window);
+  }
+}
+window.onHeadReady = se1(function(){ return geByTag1('head'); });
+window.onBodyResize = se();
+window.onBodyScroll = se(function(){ return htmlNode.scrollTop || bodyNode.scrollTop || window.scrollY || 0; });
 
+window.onscroll = function(){ onBodyScroll(true); };
+
+function sbWidth() {
+  if (typeof window.scrollBarWidth === 'undefined') {
+    var t = ce('div', {innerHTML: '<div style="height: 75px;">1<br>1</div>'}, {
+      overflowY: 'scroll',
+      position: 'absolute',
+      width: '50px',
+      height: '50px'
+    });
+    bodyNode.appendChild(t);
+    window.scrollBarWidth = Math.max(0, t.offsetWidth - t.firstChild.offsetWidth);
+    bodyNode.removeChild(t);
+  }
+  return window.scrollBarWidth;
+}
 
 function ge(id) {
   return (typeof id === 'string') ? document.getElementById(id) : id;
 }
 function geByClass(className, elem, tagName) {
-  elem = elem || document;
+  elem = ge(elem) || document;
   tagName = tagName || '*';
   if (elem.getElementsByClassName) {
     var elems = elem.getElementsByClassName(className);
@@ -121,7 +139,7 @@ function geByClass1(className, elem, tagName) {
   return geByClass(className, elem, tagName)[0];
 }
 function geByTag(tagName, elem) {
-  return (elem || document).getElementsByTagName(tagName);
+  return (ge(elem) || document).getElementsByTagName(tagName);
 }
 function geByTag1(tagName, elem) {
   return geByTag(tagName, elem)[0];
@@ -152,13 +170,10 @@ function remove(o) {
 function isSpecialClick(e) {
   return e && (e.which > 1 || e.button > 1 || e.ctrlKey || e.shiftKey || e.metaKey);
 }
-function ce(tag, attr) {
+function ce(tag, attr, style) {
   var el = document.createElement(tag);
-  if (attr) {
-    for (var k in attr) {
-      el[k] = attr[k];
-    }
-  }
+  if (attr) extend(el, attr);
+  if (style) extend(el.style, style);
   return el;
 }
 var cdf = (function(doc) {
@@ -197,9 +212,7 @@ function extend() {
   }
   return obj;
 }
-function isArray(obj) {
-  return Object.prototype.toString.call(obj) === '[object Array]';
-}
+function isArray(obj) { return Object.prototype.toString.call(obj) === '[object Array]'; }
 function trim(text) { return (text || '').replace(/^[\s\uFEFF]+|[\s\uFEFF]+$/g, ''); }
 function htsc(str) { return str.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\'/g,'&#39;').replace(/%/g,'&#37;'); }
 function rehtsc(str) { return str.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,'\'').replace(/&#37;/g,'%'); }
@@ -372,7 +385,7 @@ var VK = (function() {
 
 var app = (function() {
   var is_history = !!(window.history && history.pushState),
-      current = {};
+      viewer = {}, current = {};
   function nav(link, e, o) {
     o = extend({no_push: false, push_only: false, replace: false}, o);
     if (isSpecialClick(e)) return true;
@@ -421,15 +434,15 @@ var app = (function() {
     }, false);
   }
   
-  var viewers_friends = null, usersMap = {};
+  var usersMap = {};
   function saveViewersFriends(friends_uids) {
-    viewers_friends = {};
+    viewer.friends = {};
     for (var i = 0; i < friends_uids.length; i++) {
-      viewers_friends[friends_uids[i]] = true;
+      viewer.friends[friends_uids[i]] = true;
     }
   }
   function isFriend(uid) {
-    return viewers_friends && viewers_friends[uid] || false;
+    return viewer.friends && viewer.friends[uid] || false;
   }
   function saveUsers(uids, name_case) {
     if (!isArray(uids)) uids = [uids];
@@ -459,7 +472,6 @@ var app = (function() {
   }
   
   function parseUserInfo(info) {
-    info.friends_uids && saveViewersFriends(info.friends_uids);
     var friends = [], followers = [], photos = [];
     
     var bd = (info.user.bdate || '').toString().split('.');
@@ -516,6 +528,7 @@ var app = (function() {
     }
     return {
       my_profile: my_profile,
+      viewer_fullname: viewer.name,
       user_firstname: profile.first_name,
       user_fullname: profile.name,
       profile_photo: profile.photo_big,
@@ -625,6 +638,7 @@ var app = (function() {
         likes_count: post.likes.count,
         post_date: formatDate(post.date),
         show_attachments: attachments.length,
+        one_media: attachments.length == 1,
         attachments: attachments,
         show_comments: comments_count,
         show_more_comments: comments_count > 3,
@@ -645,12 +659,14 @@ var app = (function() {
       var photos_cnt = album.photos.shift() || 0,
           source_name = 'photos' + current.user_id;
       photo.saveSource(source_name, album.photos, photos_cnt);
-      for (var i = 0, l = album.photos.length; i < l; i++) {
-        var p = album.photos[i], photo_id = p.owner_id + '_' + p.pid;
+      var album_photos = photo.getSource(source_name).slice(0, 40);
+      current.album_photos_shown = 40;
+      for (var i = 0, l = album_photos.length; i < l; i++) {
+        var p = album_photos[i];
         photos.push({
-          photo_link: '/photo' + photo_id,
+          photo_link: '/photo' + p.id,
           photo_src: p.src,
-          onclick: 'return photo.open(\'' + photo_id + '\', \'' + source_name + '\', event);'
+          onclick: 'return photo.open(\'' + p.id + '\', \'' + source_name + '\', event);'
         });
       }
     }
@@ -683,7 +699,7 @@ var app = (function() {
   }
   function parseZParams(params) {
     if (params && params.z) {
-      var photo_params = /^photo(([0-9]+)_[0-9]+)(?:\/(.*))?$/i.exec(params.z);
+      var photo_params = /^photo((-?[0-9]+)_[0-9]+)(?:\/(.*))?$/i.exec(params.z);
       if (photo_params) {
         return {
           photo_id: photo_params[1],
@@ -712,6 +728,60 @@ var app = (function() {
     return {};
   }
   
+  var ap_in_process = false, ap_need_more = false;
+  function preloadAlbum() {
+    if (ap_in_process) return;
+    var tpl_data = {owner_id: current.user_id, offset: 0}, need = false;
+    var src_name = 'photos' + current.user_id,
+        src = photo.getSource(src_name);
+    for (var i = 0; i < 80; i++) {
+      var num = i + current.album_photos_shown, p = src[num];
+      if (num < src.length && !p) {
+        tpl_data.offset = num;
+        need = true;
+        break;
+      }
+    }
+    if (!need) return;
+    ap_in_process = true;
+    var code = tpl.get(tpl.CODE_ALBUM_PHOTOS, tpl_data);
+    VK.api('execute', {code: code}, function(data) {
+      ap_in_process = false;
+      if (!data.response) return; // ToDo: error msg 'api error'
+      photo.saveSource(src_name, data.response, src.length, tpl_data.offset);
+      if (ap_need_more) {
+        ap_need_more = false;
+        app.showMorePhotos();
+      }
+    });
+  }
+  
+  onBodyResize(function() {
+    var pc = ge('content'), ph = ge('page_header'), pvc = ge('pv_container'),
+        cw = Math.max(window.innerWidth, htmlNode.clientWidth);
+    if (pc && ph) {
+      pc.style.marginLeft = ph.style.marginLeft = Math.floor((cw - sbWidth() - pc.offsetWidth) / 2) + 'px';
+    }
+    if (pvc) {
+      pvc.style.width = cw + 'px';
+    }
+  });
+  
+  onBodyScroll(function(st) {
+    var sm_photos = geByClass1('show_more photos', 'album_page'),
+        sm_posts = geByClass1('show_more posts', 'profile_page'),
+        sh = Math.max(htmlNode.scrollHeight, bodyNode.scrollHeight),
+        ch = Math.max(window.innerHeight, htmlNode.clientHeight),
+        scroll_bottom = sh - st - ch;
+    if (scroll_bottom < 300) {
+      if (current.mode == 'profile' && sm_posts) {
+        
+      } else if (current.mode == 'photos' && sm_photos) {
+        app.showMorePhotos();
+      }
+    }
+  });
+  
   return {
     viewer_id: VK.viewer_id,
     nav: nav,
@@ -722,42 +792,12 @@ var app = (function() {
       if (bodyNode) bodyNode.scrollTop = to || 0;
     },
     openProfile: function(user, params, no_push) {
-      /*var uid = getUser(user).uid, z_params = parseZParams(params);
-      if (current.user_info && current.user_id == uid) {
-        if (z_params) {
-          return photo.open(z_params.photo_id, z_params.source_name, null, no_push);
-        } else {
-          photo.close(null, true);
-        }
-        this.getProfileInfoOnly(uid, function(html) {
-          if (app.current.link == '/') {
-            app.nav('/' + getUser(current.user_id).screen_name, null, {replace: true, push_only: true});
-          }
-          onDOMReady(function() {
-            ge('page_body').innerHTML = html;
-            removeClass('selected', 'photos_counter');
-            app.scroll();
-          });
-        });
-      } else {
-        this.getProfilePageInfo(user, function(html, z) {
-          if (app.current.link == '/') {
-            app.nav('/' + getUser(current.user_id).screen_name, null, {replace: true, push_only: true});
-          }
-          onDOMReady(function() {
-            ge('container').innerHTML = html;
-            removeClass('selected', 'photos_counter');
-            app.scroll();
-            z && parseZInfo(z);
-          });
-        }, z_params);
-      }*/
       var uid = getUser(user).uid, z_params = parseZParams(params);
       var part = (current.user_info && current.user_id == uid),
           method = part ? this.getProfileInfoOnly : this.getProfilePageInfo;
-      if (z_params) {
+      if (part && z_params) {
         return photo.open(z_params.photo_id, z_params.source_name, null, no_push);
-      } else {
+      } else if (part) {
         photo.close(null, true);
       }
       if (current.user_id != uid) {
@@ -769,6 +809,7 @@ var app = (function() {
         }
         onDOMReady(function() {
           ge(part ? 'page_body' : 'container').innerHTML = html;
+          onBodyResize(true);
           removeClass('selected', 'photos_counter');
           app.scroll();
           z && parseZInfo(z);
@@ -777,32 +818,28 @@ var app = (function() {
     },
     openPhotos: function(user, params, no_push) {
       var uid = getUser(user).uid, z_params = parseZParams(params);
-      if (current.user_info && current.user_id == uid) {
-        if (z_params) {
-          return photo.open(z_params.photo_id, z_params.source_name, null, no_push);
-        } else {
-          photo.close(null, true);
-        }
-        this.getAlbumInfoOnly(uid, function(html) {
-          onDOMReady(function() {
-            ge('page_body').innerHTML = html;
-            addClass('selected', 'photos_counter');
-            app.scroll();
-          });
-        });
-      } else {
-        this.getAlbumPageInfo(user, function(html, z) {
-          onDOMReady(function() {
-            ge('container').innerHTML = html;
-            addClass('selected', 'photos_counter');
-            app.scroll();
-            z && parseZInfo(z);
-          });
-        }, z_params);
+      var part = (current.user_info && current.user_id == uid),
+          method = part ? this.getAlbumInfoOnly : this.getAlbumPageInfo;
+      if (part && z_params) {
+        return photo.open(z_params.photo_id, z_params.source_name, null, no_push);
+      } else if (part) {
+        photo.close(null, true);
       }
+      if (current.user_id != uid) {
+        photo.saveSource('photos' + app.current.user_id, null);
+      }
+      method.call(this, user, function(html, z) {
+        onDOMReady(function() {
+          ge(part ? 'page_body' : 'container').innerHTML = html;
+          onBodyResize(true);
+          addClass('selected', 'photos_counter');
+          app.scroll();
+          z && parseZInfo(z);
+        });
+      }, z_params);
     },
     getProfilePageInfo: function(user, callback, params) {
-      var code = tpl.get(tpl.CODE_PROFILE_PAGE, extend({user: user, need_friends: !viewers_friends}, getZCodeData(params)));
+      var code = tpl.get(tpl.CODE_PROFILE_PAGE, extend({user: user, need_viewer: !viewer.uid}, getZCodeData(params)));
       VK.api('execute', {code: code}, function(data) {
         if (!data.response) return; // ToDo: error msg 'api error'
         if (!data.response.info.user.uid) return; // ToDo: error msg 'user not found'
@@ -811,6 +848,13 @@ var app = (function() {
             posts = res.posts,
             profiles = res.profiles;
         profiles && saveUsers(profiles);
+        if (res.viewer) {
+          if (res.viewer.profile) {
+            saveUsers(res.viewer.profile);
+            extend(viewer, getUser(res.viewer.profile.uid));
+          }
+          res.viewer.friends && saveViewersFriends(res.viewer.friends);
+        }
         current.user_id = info.user.uid;
         current.mode = 'profile';
         var user_info = current.user_info = parseUserInfo(info);
@@ -836,7 +880,7 @@ var app = (function() {
       });
     },
     getAlbumPageInfo: function(user, callback, params) {
-      var code = tpl.get(tpl.CODE_ALBUM_PAGE, extend({user: user, need_friends: !viewers_friends}, getZCodeData(params)));
+      var code = tpl.get(tpl.CODE_ALBUM_PAGE, extend({user: user, need_viewer: !viewer.uid}, getZCodeData(params)));
       VK.api('execute', {code: code}, function(data) {
         if (!data.response) return; // ToDo: error msg 'api error'
         if (!data.response.info.user) return; // ToDo: error msg 'user not found'
@@ -845,6 +889,13 @@ var app = (function() {
             album = res.album,
             profiles = res.profiles;
         profiles && saveUsers(profiles);
+        if (res.viewer) {
+          if (res.viewer.profile) {
+            saveUsers(res.viewer.profile);
+            extend(viewer, getUser(res.viewer.profile.uid));
+          }
+          res.viewer.friends && saveViewersFriends(res.viewer.friends);
+        }
         current.user_id = info.user.uid;
         current.mode = 'photos';
         var user_info = current.user_info = parseUserInfo(info);
@@ -905,6 +956,35 @@ var app = (function() {
         }
         comments_cont.innerHTML = tpl.get(tpl.UI_POST_COMMENT, comments);
       });
+      return false;
+    },
+    showMorePhotos: function(a) {
+      preloadAlbum();
+      var src_name = 'photos' + current.user_id,
+          src = photo.getSource(src_name),
+          album_photos = src.slice(current.album_photos_shown, current.album_photos_shown + 40);
+      for (var i = 0, l = album_photos.length; i < l; i++) {
+        if (!album_photos[i]) break;
+      }
+      if (i >= l) {
+        var photos = [];
+        current.album_photos_shown += 40;
+        for (var i = 0, l = album_photos.length; i < l; i++) {
+          var p = album_photos[i];
+          photos.push({
+            photo_link: '/photo' + p.id,
+            photo_src: p.src,
+            onclick: 'return photo.open(\'' + p.id + '\', \'' + src_name + '\', event);'
+          });
+        }
+        var pf = cdf(tpl.get(tpl.UI_PHOTO_TILE, photos));
+        geByClass1('photos_tiles', 'album_page').appendChild(pf);
+        if (current.album_photos_shown >= src.length) {
+          remove(a || geByClass1('show_more photos', 'album_page'));
+        }
+      } else {
+        ap_need_more = true;
+      }
       return false;
     }
   };
