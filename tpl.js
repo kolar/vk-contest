@@ -133,7 +133,7 @@ var ui_tpls = {
     '<div class="photo_nav left" onclick="photo.prev();"><div></div></div>' +
     '<div class="photo_nav close" onclick="photo.close();"><div></div></div>' +
     '<div id="photo_container" class="clearfix">' +
-      '<a class="photo_box" onclick="return photo.next(event);">' +
+      '<a class="photo_box" onmousedown="return photo.next(event);" onclick="return isSpecialClick(event);">' +
         '<div class="photo_frame">' +
           '<div class="img"><img alt="" /></div>' +
         '</div>' +
@@ -165,7 +165,7 @@ var code_tpls = {
 'ru={' +
   'user:u+{counters:u.counters+{news:API.wall.get({owner_id:i,count:1,filter:"owner"})[0]}},' +
   '{need_friends?{[{CODE_PROFILE_FRIENDS}]}}' +
-  'photos:API.photos.getAll({owner_id:i,count:4}),' +
+  'photos:API.photos.getAll({owner_id:i,count:4,extended:1}),' +
   'friends:API.friends.get({uid:i,fields:"photo,screen_name",count:18}),' +
   'followers:uf' +
 '};',
@@ -200,29 +200,25 @@ var code_tpls = {
 'var ' +
 'ra={' +
   'albums_count:API.users.get({uid:i,fields:"counters"})[0].counters.albums,' +
-  'photos:API.photos.getAll({owner_id:i,count:100})' +
+  'photos:API.photos.getAll({owner_id:i,count:100,extended:1})' +
 '};',
   CODE_Z_ALL_VARS:
 'var ' +
 'tp=API.photos.getById({photos:"{target_id}"})[0],' +
-'p1=API.photos.getAll({owner_id:"{owner_id}",offset:"{offset}",count:100}),' +
-'p2=API.photos.getAll({owner_id:"{owner_id}",count:100}),' +
+'p1=API.photos.getAll({owner_id:"{owner_id}",offset:"{offset}",count:100,extended:1}),' +
+'p2=API.photos.getAll({owner_id:"{owner_id}",count:100,extended:1}),' +
 'rz={z:{' +
   'target:tp,' +
   'source:p1,' +
   'source_start:p2' +
 '}};',
   CODE_PHOTOS_GET_FROM_ALL:
-'var ' +
-'a1=API.photos.getAll({owner_id:"{owner_id}",offset:"{offset1}",count:"{count1}"}),' +
-'a2=API.photos.getAll({owner_id:"{owner_id}",offset:"{offset2}",count:"{count2}"}),' +
-'p1=API.photos.getById({photos:[""{arr1::CODE_PHOTO_ID_1}]}),' +
-'p2=API.photos.getById({photos:[""{arr2::CODE_PHOTO_ID_2}]});' +
-'return{photos1:p1,photos2:p2};',
-  CODE_PHOTO_ID_1:
-',a1[{i}].owner_id+"_"+a1[{i}].pid',
-  CODE_PHOTO_ID_2:
-',a2[{i}].owner_id+"_"+a2[{i}].pid',
+'return[{items::CODE_PHOTOS_GET_ITEM}];',
+  CODE_PHOTOS_GET_ITEM:
+'{i?{[,]}}{' +
+  'offset:"{offset}",' +
+  'photos:API.photos.getAll({owner_id:"{owner_id}",offset:"{offset}",count:100,extended:1})' +
+'}',
   CODE_PHOTOS_GET_FROM_WALL:
 'return API.photos.getById({photos:"{photos}"});',
   CODE_Z_WALL_VARS:
@@ -278,7 +274,7 @@ var code_tpls = {
 'dat_profiles:API.users.get({uids:[1]+c@.reply_to_uid,fields:"screen_name",name_case:"dat"})' +
 '};',
   CODE_ALBUM_PHOTOS:
-'return API.photos.getAll({owner_id:{owner_id},offset:{offset},count:100});',
+'return API.photos.getAll({owner_id:{owner_id},offset:{offset},count:100,extended:1});',
   CODE_PROFILE_FRIENDS:
 'friends_uids:API.friends.get({uid:API.getViewerId()}),'
 };

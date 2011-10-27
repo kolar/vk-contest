@@ -25,9 +25,6 @@ a:hover {
   clear: both;
   float: none;
 }
-.noscroll {
-  overflow: hidden;
-}
 .clearfix:after {
   content: '.';
   display: block;
@@ -736,4 +733,10 @@ html.photo_view #pv_layout {
   color: #000;
   padding: 24px 210px 2px 7px;
   line-height: 17px;
+}
+#photo_container .photo_box {
+  user-select: none;
+ -o-user-select: none;
+ -moz-user-select: none;
+ -khtml-user-select: none;
 }

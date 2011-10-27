@@ -143,55 +143,43 @@ var photo = (function() {
         });
       }
     } else {
-      var tpl_data = {
-        owner_id: app.current.user_id,
-        offset1: 0, count1: 1, arr1: [],
-        offset2: 0, count2: 1, arr2: null
-      }, need = false;
-      for (var i = 0; i < 20; i++) {
+      var tpl_data = [];
+      for (var i = 0; i < 50; i++) {
         var num = i + current.num, p = getPhotoByNum(num);
         if (!p || typeof p.text === 'undefined') {
-          tpl_data.offset1 = (num >= current.source.length) ? num - current.source.length : num;
-          tpl_data.count1 = Math.min(50, current.source.length - num);
-          tpl_data.arr1 = new Array(tpl_data.count1 + 1);
-          if (tpl_data.count1 < 20) {
-            tpl_data.offset2 = 0;
-            tpl_data.count2 = 60 - tpl_data.count1;
-            tpl_data.arr2 = new Array(tpl_data.count2 + 1);
+          if (num >= current.source.length) {
+            tpl_data.push({owner_id: app.current.user_id, offset: num - current.source.length});
+            tpl_data.push({owner_id: app.current.user_id, offset: 0});
+          } else {
+            tpl_data.push({owner_id: app.current.user_id, offset: num});
           }
-          need = true;
           break;
         }
       }
-      if (!tpl_data.arr2) {
-        tpl_data.arr2 = [];
-        for (var i = -1; i > -10; i--) {
-          var num = i + current.num, p = getPhotoByNum(num);
-          if (!p || typeof p.text === 'undefined') {
-            tpl_data.count2 = 60 - tpl_data.count1;
-            tpl_data.arr2 = new Array(tpl_data.count2 + 1);
-            var offset = num - tpl_data.count2 + 1;
-            if (num < 0) {
-              tpl_data.offset2 = Math.max(0, current.source.length + offset);
-            } else {
-              tpl_data.offset2 = Math.max(0, offset);
-            }
-            need = true;
-            break;
+      for (var i = -1; i > -20; i--) {
+        var num = i + current.num, p = getPhotoByNum(num);
+        if (!p || typeof p.text === 'undefined') {
+          var offset = num - 99;
+          if (num < 0) {
+            tpl_data.push({owner_id: app.current.user_id, offset: Math.max(0, current.source.length + offset)});
+          } else {
+            tpl_data.push({owner_id: app.current.user_id, offset: Math.max(0, current.source.length - 99)});
+            (offset < 0) && tpl_data.push({owner_id: app.current.user_id, offset: 0});
           }
+          break;
         }
       }
-      if (!need) return;
+      if (!tpl_data.length) return;
       preload_in_process = true;
-      var code = tpl.get(tpl.CODE_PHOTOS_GET_FROM_ALL, tpl_data);
+      var code = tpl.get(tpl.CODE_PHOTOS_GET_FROM_ALL, {items:tpl_data});
       VK.api('execute', {code: code}, function(data) {
         preload_in_process = false;
         if (!data.response) return; // ToDo: error msg 'api error'
-        if (data.response.photos1) {
-          saveSource(current.source_name, data.response.photos1, current.source.length, tpl_data.offset1);
-        }
-        if (data.response.photos2) {
-          saveSource(current.source_name, data.response.photos2, current.source.length, tpl_data.offset2);
+        for (var i = 0, l = data.response.length; i < l; i++) {
+          if (data.response[i]) {
+            data.response[i].photos.shift();
+            saveSource(current.source_name, data.response[i].photos, current.source.length, +data.response[i].offset);
+          }
         }
         setPhoto(current.num, true);
       });
@@ -256,7 +244,7 @@ var photo = (function() {
     next: function(event) {
       if (isSpecialClick(event)) return true;
       pvInit();
-      if (current.one) return photo.close();
+      if (current.one) return false;
       (++current.num >= current.source.length) && (current.num = 0);
       setPhoto(current.num);
       show();
