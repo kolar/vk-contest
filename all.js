@@ -1,3 +1,4 @@
+/*********** main.js ***********/
 (function(window){
   var readyBound = false, isReady = false, readyList = [], ready = function() {
     if (!isReady) {
@@ -813,7 +814,7 @@ var app = (function() {
         photo.saveSource(source_name, photo_attachments);
         attachments = top_attachments.concat(bottom_attachments);
       }
-      var ru = getUser(1).first_name == 'ΠΠ°Π²ΠµΠ»';
+      var ru = getUser(1).first_name == 'Οΰβελ';
       for (var j = cmnts.length - 1; j >= 0; j--) {
         var comment = cmnts[j],
             user = getUser(comment.uid), reply_user = getUser(comment.reply_to_uid),
@@ -1193,7 +1194,7 @@ var app = (function() {
         }
         var comments = [], comments_count = cmnts.shift() || 0,
             hide_sm_link = comments_count <= 3 || comments_count <= 5 && show;
-        var ru = getUser(1).first_name == 'ΠΠ°Π²ΠµΠ»';
+        var ru = getUser(1).first_name == 'Οΰβελ';
         for (var i = cmnts.length - 1; i >= 0; i--) {
           var comment = cmnts[i],
               user = getUser(comment.uid), reply_user = getUser(comment.reply_to_uid),
@@ -1302,6 +1303,685 @@ var app = (function() {
     },
     invalidLink: function() {
       hard_nav('http://vkontakte.ru' + current.link, null, {replace: true});
+      return false;
+    }
+  };
+})();
+
+
+/*********** tpl.js ***********/
+var ui_tpls = {
+  UI_CONTAINER:
+'<div class="back2top" onclick="app.scrollToTop();"><div>Back to Top</div></div>' +
+'<div id="page_header_bg">' +
+  '<div class="pin" onclick="hasClass(\'header_fixed\', document.body) ? (removeClass(\'header_fixed\', document.body), this.innerHTML = \'Pin\') : (addClass(\'header_fixed\', document.body), this.innerHTML = \'Unpin\');">Unpin</div>' +
+  '<div id="page_header">' +
+    '<a href="/" class="left_side" onclick="return app.nav(this, event);">' +
+      '<div class="icon"></div>' +
+      '<div class="title">{viewer_fullname}</div>' +
+    '</a>' +
+    '<div class="right_side">' +
+      '<div class="top_search"><input id="header_search" type="text" placeholder="Search..." value="" /></div>' +
+      '<ul class="top_links">' +
+        '<li><a href="/feed" onclick="return false;">Newsfeed</a></li>' +
+        '<li><a href="/support" onclick="return false;">Feedback</a></li>' +
+        '<li><a href="/mail" onclick="return false;">Messages</a></li>' +
+      '</ul>' +
+    '</div>' +
+  '</div>' +
+'</div>' +
+'<div id="content">{UI_CONTENT}</div>',
+  UI_CONTENT:
+'<div class="left_column">' +
+  '<div class="user_photo">' +
+    '<div class="img"><img src="{profile_photo}" /></div>' +
+  '</div>' +
+  '{my_profile:{[' +
+    '{can_write_pm?{[<button class="blue_button">Send a Message</button>]}}' +
+    '{is_friend?{[<button class="gray_button">Remove from Friends</button>]}:{[<button class="blue_button">Add to Friends</button>]}}' +
+  ']}}' +
+  '{npva_counters_block?{[<hr />]}}' +
+  '{news_cnt?{[<div class="profile_counter"><a href="/feed" class="counter_bg" onclick="return false;"><span class="label">News</span><span>{news_cnt}</span></a></div>]}}' +
+  '{photos_cnt?{[<div id="photos_counter" class="profile_counter"><a href="{all_photos_link}" class="counter_bg" onclick="return app.nav(this, event);"><span class="label">Photos</span><span>{photos_cnt}</span></a></div>]}}' +
+  '{videos_cnt?{[<div class="profile_counter"><a href="/video" class="counter_bg" onclick="return false;"><span class="label">Videos</span><span>{videos_cnt}</span></a></div>]}}' +
+  '{audios_cnt?{[<div class="profile_counter"><a href="/audio" class="counter_bg" onclick="return false;"><span class="label">Audio files</span><span>{audios_cnt}</span></a></div>]}}' +
+  '{ff_counters_block?{[<hr />]}}' +
+  '{friends_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="/friends" class="label" onclick="return false;">Friends</a><span>{friends_cnt}</span></div></div>]}}' +
+  '{show_friends?{[<div class="users_tiles clearfix">{friends::UI_USER_TILE}</div>]}}' +
+  '{followers_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="/followers" class="label" onclick="return false;">Followers</a><span>{followers_cnt}</span></div></div>]}}' +
+  '{show_followers?{[<div class="users_tiles clearfix">{followers::UI_USER_TILE}</div>]}}' +
+'</div>' +
+'<div id="page_body" class="right_column">' +
+  '{profile_page?{[{UI_PROFILE_BODY}]}}' +
+  '{album_page?{[{UI_ALBUM_BODY}]}}' +
+'</div>' +
+'<div class="clear"></div>',
+  UI_PROFILE_BODY:
+'<div id="profile_page" class="page_content">' +
+'<h1>{user_fullname}</h1>' +
+'{user_status?{[<div class="user_status">{user_status}</div>]}}' +
+'{show_user_info?{[<dl>' +
+  '{user_birthday?{[<dt>Birthday:</dt><dd>{user_birthday}</dd>]}}' +
+  '{user_relation?{[<dt>Relationship status:</dt><dd>{user_relation}</dd>]}}' +
+'</dl>]}}' +
+'{show_more_user_info?{[<div class="show_more_about"><a href="" onclick="return false;">Show more about {user_firstname}</a></div>]}}' +
+'{show_photos?{[' +
+  '<div class="content_header"><a href="{all_photos_link}" class="all_link" onclick="return app.nav(this, event);">View all Photos</a><h4>Photos</h4></div>' +
+  '<div class="photos_tiles clearfix">{photos::UI_PHOTO_TILE}</div>' +
+']}}' +
+'{show_posts?{[' +
+  '<div class="content_header">{can_post?{[<div class="post_field"><textarea id="post_field" placeholder="Write a public message..."></textarea></div>]}:{[<h4>Wall</h4>]}}</div>' +
+  '<div class="wall_posts">' +
+    '{posts::UI_WALL_POST}' +
+    '{show_more_posts?{[<div class="show_more posts"><a href="" onclick="return app.showMorePosts();">previous posts</a></div>]}}' +
+  '</div>' +
+']}}</div>',
+  UI_ALBUM_BODY:
+'<div class="page_header">' +
+  '<div class="photos_header">' +
+    '<span id="photos_count_label">{photos_count}</span>' +
+    '<span id="albums_count_label"><a href="/albums" onclick="return false;">{albums_count}</a></span>' +
+  '</div>' +
+  '<button onclick="app.nav(\'{profile_link}\');"><span>&lsaquo;</span><div>Back to Profile</div></button>' +
+'</div>' +
+'<div id="album_page" class="page_content">' +
+  '<div class="photos_tiles clearfix">' +
+    '{all_photos::UI_PHOTO_TILE}' +
+  '</div>' +
+  '{show_more_photos?{[<div class="show_more photos"><a href="" onclick="return app.showMorePhotos();">show more photos</a></div>]}}' +
+'</div>',
+  UI_WALL_POST:
+'<div class="wall_post{i:{[ first]}}">' +
+  '<div class="image_column">' +
+    '<a href="{user_link}" onclick="return app.nav(this, event);"><img src="{user_photo}" /></a>' +
+  '</div>' +
+  '<div class="post_column">' +
+  '<a href="{user_link}" class="author" onclick="return app.nav(this, event);">{user_fullname}</a>' +
+  '{profile_photo_updated?{[<span class="explain">updated her profile picture:</span>]}}' +
+  '{repost?{[{repost::UI_WALL_REPOST_INFO}]}}' +
+  '<div class="text">{text}</div>' +
+  '{show_attachments?{[<div class="media_tiles{one_media?{[ one_media]}} clearfix">{attachments::UI_MEDIA_TILE}</div>]}}' +
+  '{likes_count?{[<div class="like_count">{likes_count}</div>]}}' +
+  '<div class="links"><span class="date">{post_date}</span></div>' +
+  '{show_comments?{[' +
+    '{show_more_comments?{[<div class="show_more comments">{UI_SM_COMMENTS_LINK}</div>]}}' +
+    '<div class="post_comments">{comments::UI_POST_COMMENT}</div>' +
+  ']}}' +
+  '</div>' +
+'</div>',
+  UI_WALL_REPOST_INFO:
+'<div class="repost">' +
+  '<a href="{user_link}" class="repost_image" onclick="return app.nav(this, event);"><img src="{user_photo}" /></a>' +
+  '<div class="repost_info">' +
+    '<a href="{user_link}" class="author" onclick="return app.nav(this, event);">{user_fullname}</a>' +
+    '<div class="date">{post_date}</div>' +
+  '</div>' +
+'</div>',
+  UI_SM_COMMENTS_LINK:
+'<a href="" onclick="return app.shComments(this, {post_id}, {show});">{show?{[Show {show_more_comments_label}]}:{[Hide comments]}}</a>',
+  UI_TEXT_CUT:
+'<span class="cut">{cut_text}</span><a href="" onclick="addClass(\'hide_cut\', this.parentNode); return false;">show all..</a><span>{full_text}</span>',
+  UI_POST_COMMENT:
+'<div id="{comment_id}" class="post_comment{i:{[ first]}}">' +
+  '<div class="image_column">' +
+    '<a href="{user_link}" onclick="return app.nav(this, event);"><img src="{user_photo}" /></a>' +
+  '</div>' +
+  '<div class="post_column">' +
+    '<a href="{user_link}" class="author" onclick="return app.nav(this, event);">{user_fullname}</a>' +
+    '<div class="text">{text}</div>' +
+    '{likes_count?{[<div class="like_count">{likes_count}</div>]}}' +
+    '<div class="links">' +
+      '<span class="date">{post_date}</span>' +
+      '{reply_to_link?{[<span class="delim">-</span><a href="{reply_to_link}" class="reply_to"{reply_onclick?{[ onclick="{reply_onclick}"]}}>{reply_to_firstname}</a>]}}' +
+    '</div>' +
+  '</div>' +
+'</div>',
+  UI_USER_TILE:
+'<div class="user_tile">' +
+  '<a href="{user_link}" onclick="return app.nav(this, event);"><img src="{user_photo}" /></a>' +
+  '<a href="{user_link}" class="username" onclick="return app.nav(this, event);">{user_firstname}</a>' +
+'</div>',
+  UI_PHOTO_TILE:
+'<div class="photo_tile">' +
+  '<a href="{photo_link}"{onclick?{[ onclick="{onclick}"]}}><img src="{photo_src}" /></a>' +
+'</div>',
+  UI_MEDIA_TILE:
+'<div class="media_tile {media_type}">' +
+  '{photo?{[{photo::UI_MEDIA_PHOTO_TILE}]}}' +
+  '{graffiti?{[{graffiti::UI_MEDIA_GRAFFITI_TILE}]}}' +
+  '{video?{[{video::UI_MEDIA_VIDEO_TILE}]}}' +
+  '{audio?{[{audio::UI_MEDIA_AUDIO_TILE}]}}' +
+  '{note?{[{note::UI_MEDIA_NOTE_TILE}]}}' +
+  '{doc?{[{doc::UI_MEDIA_DOC_TILE}]}}' +
+  '{link?{[{link::UI_MEDIA_LINK_TILE}]}}' +
+'</div>',
+  UI_MEDIA_PHOTO_TILE:
+'<a href="{link}" onclick="{onclick}"><img src="{src}" /></a>',
+  UI_MEDIA_GRAFFITI_TILE:
+'<a href="{link}" target="_blank" /><img src="{src}" /></a>',
+  UI_MEDIA_VIDEO_TILE:
+'<a href="{link}" target="_blank" />{duration?{[<span>{duration}</span>]}}<img src="{src}" /></a>',
+  UI_MEDIA_AUDIO_TILE:
+'<a href="{link}" target="_blank" /><span class="performer">{performer}</span> - <span>{title}</span></a>',
+  UI_MEDIA_NOTE_TILE:
+'<a href="{link}" target="_blank" /><span class="explain">Note</span><span class="title">{title}</span></a>',
+  UI_MEDIA_DOC_TILE:
+'<a href="{link}" target="_blank" /><span class="explain">File</span><span class="title">{title}</span></a>',
+  UI_MEDIA_LINK_TILE:
+'<a href="{url}" target="_blank" /><span class="explain">Link:</span><span class="title">{title}</span></a>',
+  UI_PHOTO_VIEW:
+'<div id="pv_bg"></div>' +
+'<div id="pv_layout">' +
+  '<div id="pv_container">' +
+    '<div class="photo_nav left" onclick="photo.prev();"><div></div></div>' +
+    '<div class="photo_nav close" onclick="photo.close();"><div></div></div>' +
+    '<div id="photo_container" class="clearfix">' +
+      '<a class="photo_box" onmousedown="return photo.next(event);" onclick="return isSpecialClick(event);">' +
+        '<div class="photo_frame">' +
+          '<div class="img"><img alt="" /></div>' +
+        '</div>' +
+      '</a>' +
+      '<div class="photos_summary"></div>' +
+      '<div class="photo_desc"></div>' +
+    '</div>' +
+  '</div>' +
+  '<div><!-- Opera margin-bottom fix --></div>' +
+'</div>'
+};
+
+var code_tpls = {
+  CODE_VIEWER_INFO_VARS:
+'var ' +
+'vi=API.getViewerId(),' +
+'vf=API.friends.get({uid:vi}),' +
+'vp=API.users.get({uid:vi,fields:"screen_name"})[0],' +
+'rv={' +
+  'profile:vp,' +
+  'friends:vf' +
+'};',
+  CODE_USER_INFO_VARS:
+'var ' +
+'u=API.users.get({uid:"{user}",fields:"photo,screen_name,photo_big,activity,bdate,relation,counters,can_post,can_write_private_message"})[0],' +
+'i=u.uid,' +
+'uf=API.subscriptions.getFollowers({uid:i,count:3}),' +
+'uu=uf.users,' +
+'ru={' +
+  'user:u+{counters:u.counters+{news:API.wall.get({owner_id:i,count:1,filter:"owner"})[0]}},' +
+  '{need_friends?{[{CODE_PROFILE_FRIENDS}]}}' +
+  'photos:API.photos.getAll({owner_id:i,count:4,extended:1}),' +
+  'friends:API.friends.get({uid:i,fields:"photo,screen_name",count:18}),' +
+  'followers:uf' +
+'};',
+  CODE_PROFILE_INFO_VARS:
+'var ' +
+'pp=API.wall.get({owner_id:i,offset:{posts_offset?{["{posts_offset}"]}:{[0]}},count:10,extended:1}),' +
+'w=pp.wall,' +
+'c=[' +
+  'API.wall.getComments({owner_id:i,post_id:w[1].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[2].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[3].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[4].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[5].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[6].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[7].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[8].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[9].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[10].id,sort:"desc",count:3})' +
+'],' +
+'rd=API.wall.getById({posts:' +
+  'w[1].copy_owner_id+"_"+w[1].copy_post_id+","+' +
+  'w[2].copy_owner_id+"_"+w[2].copy_post_id+","+' +
+  'w[3].copy_owner_id+"_"+w[3].copy_post_id+","+' +
+  'w[4].copy_owner_id+"_"+w[4].copy_post_id+","+' +
+  'w[5].copy_owner_id+"_"+w[5].copy_post_id+","+' +
+  'w[6].copy_owner_id+"_"+w[6].copy_post_id+","+' +
+  'w[7].copy_owner_id+"_"+w[7].copy_post_id+","+' +
+  'w[8].copy_owner_id+"_"+w[8].copy_post_id+","+' +
+  'w[9].copy_owner_id+"_"+w[9].copy_post_id+","+' +
+  'w[10].copy_owner_id+"_"+w[10].copy_post_id}),' + 
+'pu=' +
+  'c[0]@.uid+c[1]@.uid+c[2]@.uid+c[3]@.uid+c[4]@.uid+' +
+  'c[5]@.uid+c[6]@.uid+c[7]@.uid+c[8]@.uid+c[9]@.uid,' +
+'gu=c[0]@.reply_to_uid+c[1]@.reply_to_uid+' +
+  'c[2]@.reply_to_uid+c[3]@.reply_to_uid+' +
+  'c[4]@.reply_to_uid+c[5]@.reply_to_uid+' +
+  'c[6]@.reply_to_uid+c[7]@.reply_to_uid+' +
+  'c[8]@.reply_to_uid+c[9]@.reply_to_uid,' +
+'rp=pp+{wall:w,comments:c,dat_profiles:API.users.get({uids:[1]+gu,fields:"screen_name",name_case:"dat"}),reposts_date:rd};',
+  CODE_ALBUM_INFO_VARS:
+'var ' +
+'ra={' +
+  'albums_count:API.users.get({uid:i,fields:"counters"})[0].counters.albums,' +
+  'photos:API.photos.getAll({owner_id:i,count:100,extended:1})' +
+'};',
+  CODE_Z_ALL_VARS:
+'var ' +
+'tp=API.photos.getById({photos:"{target_id}"})[0],' +
+'p1=API.photos.getAll({owner_id:"{owner_id}",offset:"{offset}",count:100,extended:1}),' +
+'p2=API.photos.getAll({owner_id:"{owner_id}",count:100,extended:1}),' +
+'rz={z:{' +
+  'target:tp,' +
+  'source:p1,' +
+  'source_start:p2' +
+'}};',
+  CODE_PHOTOS_GET_FROM_ALL:
+'return[{items::CODE_PHOTOS_GET_ITEM}];',
+  CODE_PHOTOS_GET_ITEM:
+'{i?{[,]}}{' +
+  'offset:"{offset}",' +
+  'photos:API.photos.getAll({owner_id:"{owner_id}",offset:"{offset}",count:100,extended:1})' +
+'}',
+  CODE_PHOTOS_GET_FROM_WALL:
+'return API.photos.getById({photos:"{photos}"});',
+  CODE_Z_WALL_VARS:
+'var ' +
+'tp=API.photos.getById({photos:"{target_id}"})[0],' +
+'wp=API.wall.getById({posts:"{source_id}"})[0].attachments,' +
+'rz={z:{' +
+  'target:tp,' +
+  'source:wp@.photo+wp@.posted_photo' +
+'}};',
+  CODE_PROFILE_PAGE:
+'{need_viewer?{[{CODE_VIEWER_INFO_VARS}]}}' +
+'{CODE_USER_INFO_VARS}' +
+'{CODE_PROFILE_INFO_VARS}' +
+'{z_wall?{[{z_wall::CODE_Z_WALL_VARS}]}}' +
+'{z_all?{[{z_all::CODE_Z_ALL_VARS}]}}' +
+'return{' +
+  'info:ru,' +
+  'posts:rp,' +
+  'profiles:API.users.get({uids:uu+pu,fields:"photo,screen_name"})' +
+  '{need_viewer?{[,viewer:rv]}}' +
+'}{z_wall?{[+rz]}}{z_all?{[+rz]}};',
+  CODE_PROFILE_INFO_ONLY:
+'var i="{user_id}";' +
+'{CODE_PROFILE_INFO_VARS}' +
+'return{' +
+  'posts:rp,' +
+  'profiles:API.users.get({uids:pu,fields:"photo,screen_name"})' +
+'};',
+  CODE_ALBUM_PAGE:
+'{need_viewer?{[{CODE_VIEWER_INFO_VARS}]}}' +
+'{CODE_USER_INFO_VARS}' +
+'{CODE_ALBUM_INFO_VARS}' +
+'{z_wall?{[{z_wall::CODE_Z_WALL_VARS}]}}' +
+'{z_all?{[{z_all::CODE_Z_ALL_VARS}]}}' +
+'return{' +
+  'info:ru,' +
+  'album:ra,' +
+  'profiles:API.users.get({uids:uu,fields:"photo,screen_name"})' +
+  '{need_viewer?{[,viewer:rv]}}' +
+'}{z_wall?{[+rz]}}{z_all?{[+rz]}};',
+  CODE_ALBUM_INFO_ONLY:
+'var i="{user_id}";' +
+'{CODE_ALBUM_INFO_VARS}' +
+'return{' +
+  'album:ra' +
+'};',
+  CODE_COMMENTS:
+'var c=API.wall.getComments({owner_id:"{owner_id}",post_id:"{post_id}",sort:"desc",count:{all?{[100]}:{[3]}}});' +
+'return{' +
+'comments:c,' +
+'profiles:API.users.get({uids:c@.uid,fields:"photo,screen_name"}),' +
+'dat_profiles:API.users.get({uids:[1]+c@.reply_to_uid,fields:"screen_name",name_case:"dat"})' +
+'};',
+  CODE_ALBUM_PHOTOS:
+'return API.photos.getAll({owner_id:{owner_id},offset:{offset},count:100,extended:1});',
+  CODE_PROFILE_FRIENDS:
+'friends_uids:API.friends.get({uid:API.getViewerId()}),'
+};
+
+var tpl = (function() {
+  var re = /\{([a-z_0-9]+)(?:::([A-Z_0-9]+))?(?:\?\{\[([^{\[\]}]+)\]\})?(?::\{\[([^{\[\]}]+)\]\})?\}/gi,
+      escapeChars = '{[?:]}',
+      unescapeChars = {'{': 0, '[': 1, '?': 2, ':': 3, ']': 4, '}': 5};
+  function escapeVal(val) {
+    return val.toString().replace(/[{\[?:\]}]/g, function(s) { return '@@' + unescapeChars[s] + '@@'; });
+  }
+  function unescapeVal(val) {
+    return val.toString().replace(/@@(\d+)@@/g, function(s, i) { return escapeChars.charAt(i); });
+  }
+  function ref(data, s, data_key, value_tpl, if_value, else_value) {
+    var value = (typeof data[data_key] === 'undefined') ? '' : data[data_key];
+    if (value_tpl) return escapeVal(this.get(value_tpl, value, true));
+    if (if_value || else_value) return (value ? if_value : else_value) || '';
+    if (typeof value === 'number') return value;
+    return escapeVal(value) || this[data_key] && escapeVal(this.get(data_key, data, true)) || '';
+  }
+  function get_ref(data) {
+    return function() {
+      var args = Array.prototype.slice.call(arguments);
+      args.unshift(data);
+      return ref.apply(tpl, args);
+    }
+  }
+  
+  return {
+    get: function(_tpl, data, esc) {
+      if (isArray(data)) {
+        var html = '';
+        for (var i = 0, l = data.length; i < l; i++) {
+          html += this.get(_tpl, extend({i: i}, data[i]), true);
+        }
+        return esc ? html : unescapeVal(html);
+      }
+      if (this[_tpl]) _tpl = this[_tpl];
+      if (typeof _tpl !== 'string') return '';
+      do {
+        var before = _tpl;
+        _tpl = before.replace(re, get_ref(data || {}));
+      } while (before !== _tpl);
+      return esc ? _tpl : unescapeVal(_tpl);
+    }
+  };
+})();
+
+tpl = extend(tpl, ui_tpls, code_tpls);
+
+
+/*********** photo.js ***********/
+var photo = (function() {
+  var LOADING_IMG = '/upload_inv_mono.gif';
+  var IMG_CACHE_SIZE = 3;
+  var pvl, pvc, pc, pb, pf, pimg, pi, ps, pd;
+  function pvInit() {
+    if (pvc) return;
+    before(cdf(tpl.UI_PHOTO_VIEW), 'container');
+    pvl = ge('pv_layout');
+    pvc = ge('pv_container');
+    pc = ge('photo_container');
+    pb = geByClass1('photo_box', pc);
+    pf = geByClass1('photo_frame', pb);
+    pimg = geByClass1('img', pf);
+    pi = geByTag1('img', pf);
+    ps = geByClass1('photos_summary', pc);
+    pd = geByClass1('photo_desc', pc);
+    pvl.onclick = function() {
+      current.one && photo.close();
+    }
+  }
+  function detectstartload(img) {
+    var ti, ping = function() {
+      var ipn = img.parentNode;
+      if (!ipn) return;
+      if (ipn.offsetWidth > 0) {
+        img.onstartload && img.onstartload.call({width: ipn.offsetWidth, height: ipn.offsetHeight});
+      } else {
+        ti = setTimeout(ping, 50);
+      }
+    };
+    ping();
+  }
+  
+  var photosMap = {}, sourcesMap = {}, imgCacheMap = {};
+  function savePhoto(photos) {
+    if (!isArray(photos)) { var one = true; photos = [photos]; }
+    var output = [];
+    for (var i = 0, l = photos.length; i < l; i++) {
+      if (!photos[i]) continue;
+      var p = photos[i], _id = p.owner_id + '_' + p.pid;
+      if (!photosMap[_id]) {
+        photosMap[_id] = {id: _id};
+      }
+      output.push(extend(photosMap[_id], p));
+    }
+    return one ? output[0] : output;
+  }
+  function getPhoto(id, owner_id) {
+    if (owner_id) return photosMap[id + '_' + owner_id] || {};
+    else return photosMap[id] || {};
+  }
+  function saveSource(name, data, len, offset) {
+    if (data === null) { delete sourcesMap[name]; return; }
+    offset = offset || 0;
+    if (!sourcesMap[name]) sourcesMap[name] = new Array(len ? len : data.length);
+    var source = sourcesMap[name];
+    data = savePhoto(data);
+    if ((offset + data.length) > source.length || offset < 0) {
+      var endLength = offset < 0 ? -offset : source.length - offset,
+          startLength = data.length - endLength;
+      Array.prototype.splice.apply(source, [offset, endLength].concat(data.slice(0, endLength)));
+    } else {
+      Array.prototype.splice.apply(source, [offset, data.length].concat(data));
+    }
+  }
+  function getSource(name) {
+    if (typeof name !== 'string') return name;
+    return sourcesMap[name] || [];
+  }
+  function getNum(photo_id, source) {
+    if (!source) source = current.source;
+    for (var num in source) {
+      if (source[num].id == photo_id) return +num;
+    }
+    return -1;
+  }
+  
+  function setImageSize() {
+    if (!current.image.w) current.image.w = this.width || 0;
+    if (!current.image.h) current.image.h = this.height || 0;
+    var w = current.image.w, h = current.image.h;
+    if (!w || !h) return;
+    var maxW = app.cw() - sbWidth() - 210, maxH = app.ch() - 110;
+    var minW = 604, minH = 453;
+    if (maxW < w || maxH < h) {
+      var sw = maxW / w, sh = maxH / h,
+          s = Math.min(sw, sh);
+      w = Math.round(w * s); h = Math.round(h * s);
+      if (minW > w && minH > h) {
+        var sw = minW / w, sh = minH / h,
+            s = Math.min(sw, sh);
+        w = Math.round(w * s); h = Math.round(h * s);
+      }
+    }
+    pi.style.width = pc.style.width = pf.style.width = w + 'px';
+    pi.style.height = pb.style.height = pf.style.height = h + 'px';
+    if (current.image.h <= 13) { // fix for slowpoke browsers
+      var that = this; current.image.h = 0;
+      setTimeout(function(){ setImageSize.call(that); }, 50);
+    }
+  }
+  var current = {
+    source: null,
+    source_name: null,
+    source_type: null,
+    one: true,
+    all: false,
+    num: 0
+  };
+  function setPhoto(num, no_push, replace) {
+    var source = current.source, p = source[num];
+    if (p) {
+      pvl.scrollTop = 0;
+      var photo_link = 'photo' + p.id, photo_src = p.src_xxbig || p.src_xbig || p.src_big;
+      pb.href = '/' + photo_link;
+      if (pi && pi.src != photo_src) {
+        pi.onstartload = pi.onload = null;
+        remove(pi);
+        current.image = {};
+        pi = ce('img', {src: photo_src, alt: ''});
+        pi.onstartload = pi.onload = setImageSize;
+        pimg.appendChild(pi);
+        detectstartload(pi);
+      }
+      ps.innerHTML = source.length > 1 ? 'Photo ' + (num + 1) + ' of ' + source.length : 'Photo';
+      pd.innerHTML = prepareText(p.text || '');
+      var url = app.current.mode == 'profile' ?
+        '?z=' + photo_link + '/' + current.source_name + (
+          current.source_type == 'photos' ? '&n=' + current.num : ''
+        ) :
+        '/' + photo_link + '?n=' + current.num;
+      !no_push && app.nav(url, null, {push_only: true, replace: replace});
+    } else {
+      current.image = {};
+      pi.src = LOADING_IMG;
+      setImageSize.call(pi);
+    }
+    if (!current.one) {
+      preloadPhotos();
+      preloadImages();
+    }
+  }
+  var preload_in_process = false;
+  function getPhotoByNum(num) {
+    if (num < 0) return getPhotoByNum(current.source.length + num);
+    if (num >= current.source.length) return getPhotoByNum(num - current.source.length);
+    return current.source[num];
+  }
+  function preloadPhotos() {
+    if (preload_in_process) return;
+    if (current.source_type == 'wall') {
+      if (!current.all) {
+        var photo = getPhotoByNum(current.num);
+        preload_in_process = true;
+        var photos = [];
+        for (var i = 0, l = current.source.length; i < l; i++) {
+          photos.push(current.source[i].id);
+        }
+        var code = tpl.get(tpl.CODE_PHOTOS_GET_FROM_WALL, {photos: photos.join(',')});
+        VK.api('execute', {code: code}, function(data) {
+          preload_in_process = false;
+          current.all = true;
+          if (!data.response) return app.apiError(data);
+          savePhoto(data.response);
+          setPhoto(current.num, true);
+        });
+      }
+    } else if (current.source_type == 'photos') {
+      var tpl_data = [];
+      for (var i = 0; i < 50; i++) {
+        var num = i + current.num, p = getPhotoByNum(num);
+        if (!p || typeof p.text === 'undefined') {
+          if (num >= current.source.length) {
+            tpl_data.push({owner_id: app.current.user_id, offset: num - current.source.length});
+            tpl_data.push({owner_id: app.current.user_id, offset: 0});
+          } else {
+            tpl_data.push({owner_id: app.current.user_id, offset: num});
+          }
+          break;
+        }
+      }
+      for (var i = -1; i > -20; i--) {
+        var num = i + current.num, p = getPhotoByNum(num);
+        if (!p || typeof p.text === 'undefined') {
+          var offset = num - 99;
+          if (num < 0) {
+            tpl_data.push({owner_id: app.current.user_id, offset: Math.max(0, current.source.length + offset)});
+          } else {
+            tpl_data.push({owner_id: app.current.user_id, offset: Math.max(0, current.source.length - 99)});
+            (offset < 0) && tpl_data.push({owner_id: app.current.user_id, offset: 0});
+          }
+          break;
+        }
+      }
+      if (!tpl_data.length) return;
+      preload_in_process = true;
+      var code = tpl.get(tpl.CODE_PHOTOS_GET_FROM_ALL, {items:tpl_data});
+      VK.api('execute', {code: code}, function(data) {
+        preload_in_process = false;
+        if (!data.response) return app.apiError(data);
+        for (var i = 0, l = data.response.length; i < l; i++) {
+          if (data.response[i]) {
+            data.response[i].photos.shift();
+            saveSource(current.source_name, data.response[i].photos, current.source.length, +data.response[i].offset);
+          }
+        }
+        setPhoto(current.num, true);
+      });
+    }
+  }
+  function preloadImages() {
+    for (var i = 0, j = current.num + 1; i < IMG_CACHE_SIZE; i++) {
+      var num = i + j, p = getPhotoByNum(num),
+          photo_src = p && (p.src_xxbig || p.src_xbig || p.src_big);
+      if (photo_src && !imgCacheMap[photo_src]) {
+        var img = imgCacheMap[photo_src] = new Image();
+        img.src = photo_src;
+        img.onload = function() { imgCacheMap[photo_src] = true; };
+      }
+    }
+  }
+  function show() {
+    if (!pvc) return;
+    var st = htmlNode.scrollTop;
+    addClass('photo_view', htmlNode);
+    htmlNode.scrollTop = st; // ff fix
+    onBodyResize(true);
+    (current.one ? addClass : removeClass)('one_photo', pvc);
+  }
+  function hide(no_push) {
+    if (!pvc) return;
+    var st = htmlNode.scrollTop;
+    removeClass('photo_view', htmlNode);
+    htmlNode.scrollTop = st; // ff fix
+    addClass('one_photo', pvc);
+    var return_url = app.current.mode == 'profile' ?
+      '/' + app.user(app.current.user_id).screen_name :
+      '/photos' + app.current.user_id;
+    !no_push && app.nav(return_url, null, {push_only: true});
+  }
+  
+  onBodyResize(function() {
+    if (!pvc) return;
+    if (!hasClass('photo_view', htmlNode)) return;
+    pi && setImageSize.call(pi);
+  });
+  
+  return {
+    save: savePhoto,
+    get: getPhoto,
+    saveSource: saveSource,
+    getSource: getSource,
+    open: function(p, src, event, no_push) {
+      if (isSpecialClick(event)) return true;
+      pvInit();
+      current.source_name = src;
+      current.source_type = (/^(photos|wall)/i.exec(current.source_name) || [''])[0];
+      current.source = getSource(current.source_name);
+      current.num = getNum(p, current.source);
+      if (current.num === -1) {
+        var ph = getPhoto(p);
+        if (ph.id) {
+          current.source_type = 'photo';
+          current.source = [ph];
+          current.num = 0;
+        } else {
+          if (typeof app.current.params.n !== 'undefined') {
+            current.num = +app.current.params.n;
+          } else {
+            return false;
+          }
+        }
+      }
+      current.one = current.source.length < 2;
+      current.all = false;
+      var no_photo = current.source[current.num] && (p != current.source[current.num].id);
+      setPhoto(current.num, no_push && !no_photo, no_photo);
+      show();
+      pvl.scrollTop = 0;
+      return false;
+    },
+    prev: function(event) {
+      if (isSpecialClick(event)) return true;
+      pvInit();
+      if (current.one) return photo.close();
+      (--current.num < 0) && (current.num = current.source.length - 1);
+      setPhoto(current.num);
+      show();
+      return false;
+    },
+    next: function(event) {
+      if (isSpecialClick(event)) return true;
+      pvInit();
+      if (current.one) return false;
+      (++current.num >= current.source.length) && (current.num = 0);
+      setPhoto(current.num);
+      show();
+      return false;
+    },
+    close: function(event, no_push) {
+      if (isSpecialClick(event)) return true;
+      hide(no_push);
       return false;
     }
   };

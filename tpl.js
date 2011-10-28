@@ -1,5 +1,6 @@
 var ui_tpls = {
   UI_CONTAINER:
+'<div class="back2top" onclick="app.scrollToTop();"><div>Back to Top</div></div>' +
 '<div id="page_header_bg">' +
   '<div class="pin" onclick="hasClass(\'header_fixed\', document.body) ? (removeClass(\'header_fixed\', document.body), this.innerHTML = \'Pin\') : (addClass(\'header_fixed\', document.body), this.innerHTML = \'Unpin\');">Unpin</div>' +
   '<div id="page_header">' +

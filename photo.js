@@ -93,7 +93,11 @@ var photo = (function() {
       }
     }
     pi.style.width = pc.style.width = pf.style.width = w + 'px';
-    pb.style.height = pf.style.height = h + 'px';
+    pi.style.height = pb.style.height = pf.style.height = h + 'px';
+    if (current.image.h <= 13) { // fix for slowpoke browsers
+      var that = this; current.image.h = 0;
+      setTimeout(function(){ setImageSize.call(that); }, 50);
+    }
   }
   var current = {
     source: null,

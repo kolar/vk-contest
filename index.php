@@ -17,9 +17,7 @@ if (!IS_AUTH) {
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <title>Конкурс для веб-разработчиков</title>
     
-    <script type="text/javascript" src="main.js"></script>
-    <script type="text/javascript" src="tpl.js"></script>
-    <script type="text/javascript" src="photo.js"></script>
+    <script type="text/javascript" src="all.js"></script>
     <link type="text/css" rel="stylesheet" href="style.css">
     <script type="text/javascript">app.nav(location, null, {no_push: true});</script>
   </head>

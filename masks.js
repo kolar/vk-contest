@@ -1,3 +1,6 @@
+function ge(id) {
+  return (typeof id === 'string') ? document.getElementById(id) : id;
+}
 var fixMask = false;
 function maskOn(num, mode, over) {
   if (fixMask && over) return;
