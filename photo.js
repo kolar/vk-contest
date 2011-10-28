@@ -72,7 +72,7 @@ var photo = (function() {
     for (var num in source) {
       if (source[num].id == photo_id) return +num;
     }
-    return 0;
+    return -1;
   }
   
   function setImageSize() {
@@ -110,12 +110,14 @@ var photo = (function() {
     pd.innerHTML = prepareText(p.text || '');
     var url = app.current.mode == 'profile' ?
       '?z=' + photo_link + '/' + current.source_name + (
-        current.source_type == 'wall' ? '' : '&n=' + current.num
+        current.source_type == 'photos' ? '&n=' + current.num : ''
       ) :
       '/' + photo_link + '?n=' + current.num;
     !no_push && app.nav(url, null, {push_only: true, replace: replace});
-    preloadPhotos();
-    preloadImages();
+    if (!current.one) {
+      preloadPhotos();
+      preloadImages();
+    }
   }
   var preload_in_process = false;
   function getPhotoByNum(num) {
@@ -137,12 +139,12 @@ var photo = (function() {
         VK.api('execute', {code: code}, function(data) {
           preload_in_process = false;
           current.all = true;
-          if (!data.response) return; // ToDo: error msg 'api error'
+          if (!data.response) return app.apiError(data);
           savePhoto(data.response);
           setPhoto(current.num, true);
         });
       }
-    } else {
+    } else if (current.source_type == 'photos') {
       var tpl_data = [];
       for (var i = 0; i < 50; i++) {
         var num = i + current.num, p = getPhotoByNum(num);
@@ -174,7 +176,7 @@ var photo = (function() {
       var code = tpl.get(tpl.CODE_PHOTOS_GET_FROM_ALL, {items:tpl_data});
       VK.api('execute', {code: code}, function(data) {
         preload_in_process = false;
-        if (!data.response) return; // ToDo: error msg 'api error'
+        if (!data.response) return app.apiError(data);
         for (var i = 0, l = data.response.length; i < l; i++) {
           if (data.response[i]) {
             data.response[i].photos.shift();
@@ -198,13 +200,17 @@ var photo = (function() {
   }
   function show() {
     if (!pvc) return;
+    var st = htmlNode.scrollTop;
     addClass('photo_view', htmlNode);
+    htmlNode.scrollTop = st; // ff fix
     onBodyResize(true);
     (current.one ? addClass : removeClass)('one_photo', pvc);
   }
   function hide(no_push) {
     if (!pvc) return;
+    var st = htmlNode.scrollTop;
     removeClass('photo_view', htmlNode);
+    htmlNode.scrollTop = st; // ff fix
     addClass('one_photo', pvc);
     var return_url = app.current.mode == 'profile' ?
       '/' + app.user(app.current.user_id).screen_name :
@@ -223,9 +229,14 @@ var photo = (function() {
       current.source_name = src;
       current.source_type = (/^(photos|wall)/i.exec(current.source_name) || [''])[0];
       current.source = getSource(current.source_name);
+      current.num = getNum(p, current.source);
+      if (current.num === -1) {
+        current.source_type = 'photo';
+        current.source = [getPhoto(p)];
+        current.num = 0;
+      }
       current.one = current.source.length < 2;
       current.all = false;
-      current.num = getNum(p, current.source);
       var no_photo = p != current.source[current.num].id;
       setPhoto(current.num, no_push && !no_photo, no_photo);
       show();

@@ -14,7 +14,8 @@ if ($auth_data && $auth_data['access_token'] && intval($auth_data['user_id'])) {
   SetCookie('auth_key', md5(API_ID . '_' . $viewer_id . '_' . SECRET), $expires);
   SetCookie('access_token', $auth_data['access_token'], $expires);
   
-  header('Location: ' . BASE_URL . '/');
+  $return = substr($_GET['return'], 0, 1) == '/' ? $_GET['return'] : '/';
+  header('Location: ' . BASE_URL . $return);
 } else {
   SetCookie('viewer_id');
   SetCookie('auth_key');

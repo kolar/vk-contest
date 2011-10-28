@@ -163,6 +163,13 @@ function before(o, b) {
   b = ge(b);
   b.parentNode && b.parentNode.insertBefore(ge(o), b);
 }
+function after(o, a) {
+  a = ge(a);
+  if (a.parentNode) {
+    if (a.nextSibling) a.parentNode.insertBefore(ge(o), a.nextSibling);
+    else a.parentNode.appendChild(ge(o));
+  }
+}
 function remove(o) {
   o = ge(o);
   o && o.parentNode && o.parentNode.removeChild(o);
@@ -216,6 +223,8 @@ function isArray(obj) { return Object.prototype.toString.call(obj) === '[object 
 function trim(text) { return (text || '').replace(/^[\s\uFEFF]+|[\s\uFEFF]+$/g, ''); }
 function htsc(str) { return str.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\'/g,'&#39;').replace(/%/g,'&#37;'); }
 function rehtsc(str) { return str.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,'\'').replace(/&#37;/g,'%'); }
+function nl2br(str) { return str.replace(/\r\n?|\n/g, '<br />\n'); }
+function br2nl(str) { return str.replace(/<br( \/)?>\n?/g, '\n'); }
 function escapeRE(s) { return s ? s.replace(/([.*+?^${}()|[\]\/\\])/g, '\\$1') : ''; }
 function qs2obj(qs) {
   if (!qs) return {};
@@ -227,6 +236,105 @@ function qs2obj(qs) {
     }
   }
   return params;
+}
+var rf = function() { return false; };
+function addEvent(elem, types, handler) {
+  elem = ge(elem);
+  handler = handler || rf;
+  if (!elem || elem.nodeType == 3 || elem.nodeType == 8) return;
+  if (elem.setInterval && elem != window) elem = window; // for ie
+  var types = types.split(' ');
+  for (var i = 0, l = types.length; i < l; i++) {
+    var type = types[i];
+    if (elem.addEventListener) {
+      elem.addEventListener(type, handler, false);
+    } else if (elem.attachEvent) {
+      elem.attachEvent('on' + type, handler);
+    }
+  }
+}
+function removeEvent(elem, types, handler) {
+  elem = ge(elem);
+  handler = handler || rf;
+  if (!elem || elem.nodeType == 3 || elem.nodeType == 8) return;
+  var types = types.split(' ');
+  for (var i = 0, l = types.length; i < l; i++) {
+    var type = types[i];
+    if (elem.removeEventListener) {
+      elem.removeEventListener(type, handler, false);
+    } else if (elem.detachEvent) {
+      elem.detachEvent('on' + type, handler);
+    }
+  }
+}
+
+function placeholderSetup(id, pc, tc) {
+  var elem = ge(id);
+  pc = pc || '#afb8c2';
+  tc = tc || '#000';
+  if (!elem) return;
+  var ph = elem.getAttribute('placeholder');
+  if (ph && ph != "") {
+    elem['active'] = 1;
+    if ((!elem.value || elem.value == ph) && !elem.focused) {
+      elem.style.color = pc;
+      elem.value = ph;
+      elem['active'] = 0;
+    }
+    if (!elem['phevents']) {
+      addEvent(elem, 'focus', function() {
+        if (elem['active']) return;
+        elem['active'] = 1;
+        elem.value = '';
+        elem.style.color = tc;
+      });
+      addEvent(elem, 'blur', function() {
+        if(!elem['active'] || !ph || elem.value != '') return;
+        elem['active'] = 0;
+        elem.style.color = pc;
+        elem.value = ph;
+      });
+      elem['phevents'] = 1;
+      elem.getValue = function() {
+        return elem['active'] ? elem.value : '';
+      }
+    }
+  }
+}
+function initAdjustHeight(id, fwidth, fheight, fireEvent) {
+  var o = ge(id), helper = ge(id + '_adjust_helper');
+  if (!helper) {
+    helper = ce('textarea', {
+      id: id + '_adjust_helper',
+      disabled: true,
+      readOnly: true,
+      min_height: fheight || o.offsetHeight
+    }, {
+      width: fwidth || o.offsetWidth,
+      height: '1px',
+      position: 'absolute',
+      top: '-50000px',
+      left: '-5000px',
+      overflow: 'hidden'
+    });
+    after(helper, o);
+  }
+  function updateHeight(e) {
+    helper.value = o.value + (e.type == 'blur' ? '' : '\n');
+    var new_height = helper.scrollHeight - helper.offsetHeight + 1;
+    if (new_height < helper.min_height) {
+      new_height = helper.min_height;
+    }
+    o.style.height = new_height + 'px';
+    o.style.overflow = 'hidden';
+  }
+  o.updateHeight = updateHeight;
+  
+  if (!fireEvent) {
+    removeEvent(o, 'keydown keypress keyup focus blur', updateHeight);
+    addEvent(o, 'keydown keypress keyup focus blur', updateHeight);
+  }
+  updateHeight({type: 'blur'});
 }
 
 function formatCnt(cnt) {
@@ -283,17 +391,28 @@ function makeReplyLink(text, reply_to_uid, reply_to_cid) {
   if (!reply_to_uid) return text;
   return text ? text.toString().replace(new RegExp('^\\[id(' + intval(reply_to_uid) + ')\\|([^\\]]+)\\]'), '<a href="/' + app.user(reply_to_uid).screen_name + '" class="reply_to" onclick="return false;">$2</a>') : '';
 }
+function cutText(text) {
+  var original_text = rehtsc(br2nl(text)),
+      lines = original_text.split('\n');
+  if (original_text.length > 520 || lines.length > 5) {
+    var cut_lines = lines.slice(0, 5).join('\n'),
+        cut = cut_lines.length > 280 ? original_text.substr(0, 280) : cut_lines;
+    return tpl.get(tpl.UI_TEXT_CUT, {cut_text: nl2br(htsc(cut + '\n')), full_text: text});
+  }
+  return text;
+}
 function makeLinks(text) {
   if (!text) return '';
   text = text.toString();
   text = text.replace(/\[((?:id|club)[0-9]+)\|([^\]]+)\]/g, '<a href="/$1">$2</a>');
-  //text = text.replace(/https?:\/\/[a-z0-9+\$_-]+(\.[a-z0-9+\$_-]+)*(\/[a-z0-9+\$_-][^\s]*)*(:[0-9]+)?\/?([a-z+&?\$_.-][a-z0-9;:@\/&?%=+\$_.-]*)?(#[a-z_.-][a-z0-9+\$_.-]*)?/i, function(s) {
-  text = text.replace(/\b(?:(?:https?):\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])/i, function(s) {
+  //text = text.replace(/https?:\/\/[a-z0-9+\$_-]+(\.[a-z0-9+\$_-]+)*(\/[a-z0-9+\$_-][^\s]*)*(:[0-9]+)?\/?([a-z+&?\$_.-][a-z0-9;:@\/&?%=+\$_.-]*)?(#[a-z_.-][a-z0-9+\$_.-]*)?/gi, function(s) {
+  text = text.replace(/\b(?:(?:https?):\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])/gi, function(s) {
     return '<a href="' + s + '" target="_blank">' + (s.length > 55 ? s.substr(0, 52) + '...' : s) + '</a>';
   });
   return text;
 }
 function prepareText(text) {
+  text = cutText(text);
   return makeLinks(text); // htsc(rehtsc(text))
 }
 
@@ -369,7 +488,6 @@ var VK = (function() {
       }
       var cid = ++nextCallbackId;
       this._callbacks[cid] = function(data) {
-        console.log(cid + ': ', data);
         callback && callback(data);
         deleteCallback(cid);
       }
@@ -386,10 +504,19 @@ var VK = (function() {
 var app = (function() {
   var is_history = !!(window.history && history.pushState),
       viewer = {}, current = {};
+  function hard_nav(link, e, o) {
+    if (e || o && o.push_only) return true;
+    if (o && o.replace) {
+      location.replace(link);
+    } else {
+      location.href = link;
+    }
+    return true;
+  }
   function nav(link, e, o) {
     o = extend({no_push: false, push_only: false, replace: false}, o);
     if (isSpecialClick(e)) return true;
-    if (!o.no_push && !is_history) return true;
+    if (!o.no_push && !is_history) return hard_nav(link, e, o);
     if (!link) return true;
     var push = link, path = '', params = {};
     if (typeof link !== 'string') {
@@ -406,7 +533,7 @@ var app = (function() {
     if (!o.no_push && current.link != push) {
       try {
         o.replace ? history.replaceState(null, null, push) : history.pushState(null, null, push);
-      } catch (e) { return true; }
+      } catch (e) { return hard_nav(link, e, o); }
     }
     current.link = push;
     return o.push_only ? false : processLink(path, params, o.no_push);
@@ -433,6 +560,9 @@ var app = (function() {
       nav(location, null, {no_push: true});
     }, false);
   }
+  function setTitle(title) {
+    document.title = title;
+  }
   
   var usersMap = {};
   function saveViewersFriends(friends_uids) {
@@ -457,14 +587,15 @@ var app = (function() {
         delete user.first_name;
         delete user.last_name;
       }
+      user.gid && (user.uid = -user.gid);
       if (!usersMap[user.uid]) {
         usersMap[user.uid] = {
-          screen_name: 'id' + user.uid
+          screen_name: (user.gid ? 'club' + user.gid : 'id' + user.uid)
         };
       }
       var u = extend(usersMap[user.uid], user);
-      extend(u, {name: u.first_name + ' ' + u.last_name});
-      usersMap[u.screen_name] = usersMap['id' + u.uid] = u;
+      extend(u, u.gid ? {} : {name: u.first_name + ' ' + u.last_name});
+      usersMap[u.screen_name] = usersMap[u.gid ? 'club' + u.gid : 'id' + u.uid] = u;
     }
   }
   function getUser(uid) {
@@ -537,6 +668,7 @@ var app = (function() {
       is_friend: isFriend(profile.uid),
       npva_counters_block: npva && !my_profile,
       news_cnt: profile.counters.news && formatCnt(profile.counters.news),
+      photos_count: photos_cnt && formatCnt(photos_cnt),
       photos_cnt: photos_cnt && formatCnt(photos_cnt),
       videos_cnt: profile.counters.videos && formatCnt(profile.counters.videos),
       audios_cnt: profile.counters.audios && formatCnt(profile.counters.audios),
@@ -561,17 +693,33 @@ var app = (function() {
   function parseProfileInfo(posts, offset) {
     var posts_data = [];
     saveUsers(posts.profiles);
+    saveUsers(posts.groups);
     saveUsers(posts.dat_profiles, 'dat');
     var posts_count = posts.wall.shift() || 0;
     if (!offset) current.wall_posts_shown = 10;
+    var repostsDateMap = {};
+    for (var i = 0, l = posts.reposts_date.length; i < l; i++) {
+      repostsDateMap[posts.reposts_date[i].id] = posts.reposts_date[i].date;
+    }
     for (var i = 0; i < posts.wall.length; i++) {
       if (!posts.wall[i] || !posts.wall[i].id) continue;
       var post = posts.wall[i],
-          cmnts = post.comments || [],
+          cmnts = posts.comments[i] || [],
           from = getUser(post.from_id),
-          attachments = [],
+          attachments = [], top_attachments = [], bottom_attachments = [],
           comments_count = cmnts.shift() || 0,
-          comments = [];
+          comments = [],
+          repost = null;
+      if (post.copy_post_id) {
+        var repost_user = getUser(post.copy_owner_id),
+            repost_date = repostsDateMap[post.copy_post_id];
+        repost = {
+          user_link: '/' + repost_user.screen_name,
+          user_photo: repost_user.photo,
+          user_fullname: repost_user.name,
+          post_date: repost_date ? formatDate(repost_date) : ''
+        };
+      }
       if (post.attachments) {
         var photo_attachments = [], source_name = 'wall' + post.to_id + '_' + post.id;
         for (var j = 0; j < post.attachments.length; j++) {
@@ -579,41 +727,83 @@ var app = (function() {
           if (media.type == 'photo') {
             photo_attachments.push(media.photo);
             var p = media.photo, photo_id = p.owner_id + '_' + p.pid;
-            attachments.push({
-              media_type: media.type,
-              media_link: '/photo' + photo_id,
-              media_src: media.photo.src,
-              onclick: 'return photo.open(\'' + photo_id + '\', \'' + source_name + '\', event);'
+            top_attachments.push({
+              media_type: 'photo',
+              photo: {
+                link: '/photo' + photo_id,
+                src: media.photo.src,
+                onclick: 'return photo.open(\'' + photo_id + '\', \'' + source_name + '\', event);'
+              }
             });
           } else if (media.type == 'posted_photo') {
             photo_attachments.push(media.posted_photo);
             var p = media.posted_photo, photo_id = p.owner_id + '_' + p.pid;
-            attachments.push({
-              media_type: media.type,
-              media_link: '/photo' + photo_id,
-              media_src: media.photo.src,
-              onclick: 'return photo.open(\'' + photo_id + '\', \'' + source_name + '\', event);'
+            top_attachments.push({
+              media_type: 'photo',
+              photo: {
+                link: '/photo' + photo_id,
+                src: media.photo.src,
+                onclick: 'return photo.open(\'' + photo_id + '\', \'' + source_name + '\', event);'
+              }
             });
           } else if (media.type == 'graffiti') {
-            attachments.push({
-              media_type: media.type,
-              media_link: '/graffiti' + media.graffiti.owner_id + '_' + media.graffiti.gid,
-              media_src: media.graffiti.src
+            top_attachments.push({
+              media_type: 'graffiti',
+              graffiti: {
+                link: 'http://vkontakte.ru/graffiti' + media.graffiti.gid + '?from=' + media.graffiti.owner_id,
+                src: media.graffiti.src
+              }
             });
           } else if (media.type == 'video') {
             var vd = media.video.duration,
                 h = Math.floor(vd / 3600), vm = vd % 3600,
                 m = Math.floor(vm / 60), sm = (m < 10 && h ? '0' + m : m),
                 s = vm % 60, ss = (s < 10 ? '0' + s : s), ds = (h ? h + ':' : '') + sm + ':' + ss;
-            attachments.push({
-              media_type: media.type,
-              media_link: '/video' + media.video.owner_id + '_' + media.video.vid,
-              media_src: media.video.image_small,
-              duration: vd ? ds : 0
+            top_attachments.push({
+              media_type: 'video',
+              video: {
+                link: 'http://vkontakte.ru/video' + media.video.owner_id + '_' + media.video.vid,
+                src: media.video.image_small,
+                duration: vd ? ds : 0
+              }
+            });
+          } else if (media.type == 'audio') {
+            bottom_attachments.push({
+              media_type: 'audio bottom',
+              audio: {
+                link: 'http://vkontakte.ru/audio?id=' + media.audio.owner_id + '&audio_id=' + media.audio.aid,
+                performer: htsc(media.audio.performer),
+                title: htsc(media.audio.title)
+              }
+            });
+          } else if (media.type == 'note') {
+            bottom_attachments.push({
+              media_type: 'note bottom',
+              note: {
+                link: 'http://vkontakte.ru/note' + media.note.owner_id + '_' + media.note.nid,
+                title: htsc(media.note.title)
+              }
+            });
+          } else if (media.type == 'doc') {
+            bottom_attachments.push({
+              media_type: 'doc bottom',
+              doc: {
+                link: media.doc.url,
+                title: htsc(media.doc.title)
+              }
+            });
+          } else if (media.type == 'link') {
+            bottom_attachments.push({
+              media_type: 'link bottom',
+              link: {
+                url: media.link.url,
+                title: htsc(/^(https?:\/\/)?([^\/]+)/i.exec(media.link.url)[2] || '')
+              }
             });
           }
         }
         photo.saveSource(source_name, photo_attachments);
+        attachments = top_attachments.concat(bottom_attachments);
       }
       var ru = getUser(1).first_name == 'Павел';
       for (var j = cmnts.length - 1; j >= 0; j--) {
@@ -635,11 +825,12 @@ var app = (function() {
         user_link: '/' + from.screen_name,
         user_photo: from.photo,
         user_fullname: from.name,
+        repost: repost,
         text: prepareText(post.text),
         likes_count: post.likes.count,
         post_date: formatDate(post.date),
         show_attachments: attachments.length,
-        one_media: attachments.length == 1,
+        one_media: top_attachments.length == 1,
         attachments: attachments,
         show_comments: comments_count,
         show_more_comments: comments_count > 3,
@@ -749,7 +940,7 @@ var app = (function() {
     var code = tpl.get(tpl.CODE_ALBUM_PHOTOS, tpl_data);
     VK.api('execute', {code: code}, function(data) {
       ap_in_process = false;
-      if (!data.response) return; // ToDo: error msg 'api error'
+      if (!data.response) return app.apiError(data);
       photo.saveSource(src_name, data.response, src.length, tpl_data.offset);
       if (ap_need_more) {
         ap_need_more = false;
@@ -810,7 +1001,11 @@ var app = (function() {
           app.nav('/' + getUser(current.user_id).screen_name, null, {replace: true, push_only: true});
         }
         onDOMReady(function() {
+          setTitle(current.user_info.user_fullname);
           ge(part ? 'page_body' : 'container').innerHTML = html;
+          placeholderSetup('header_search', '#111', '#111');
+          placeholderSetup('post_field', '#a4a4a4', '#222');
+          //initAdjustHeight('post_field', 0, 16);
           onBodyResize(true);
           removeClass('selected', 'photos_counter');
           app.scroll();
@@ -832,7 +1027,9 @@ var app = (function() {
       }
       method.call(this, user, function(html, z) {
         onDOMReady(function() {
+          setTitle(current.user_info.user_fullname + '\'s Photos | ' + current.user_info.photos_count);
           ge(part ? 'page_body' : 'container').innerHTML = html;
+          placeholderSetup('header_search', '#111', '#111');
           onBodyResize(true);
           addClass('selected', 'photos_counter');
           app.scroll();
@@ -843,7 +1040,7 @@ var app = (function() {
     getProfilePageInfo: function(user, callback, params) {
       var code = tpl.get(tpl.CODE_PROFILE_PAGE, extend({user: user, need_viewer: !viewer.uid}, getZCodeData(params)));
       VK.api('execute', {code: code}, function(data) {
-        if (!data.response) return; // ToDo: error msg 'api error'
+        if (!data.response) return app.apiError(data);
         if (!data.response.info.user.uid) return; // ToDo: error msg 'user not found'
         var res = data.response,
             info = res.info,
@@ -869,7 +1066,7 @@ var app = (function() {
     getProfileInfoOnly: function(user, callback) {
       var code = tpl.get(tpl.CODE_PROFILE_INFO_ONLY, {user_id: user});
       VK.api('execute', {code: code}, function(data) {
-        if (!data.response) return; // ToDo: error msg 'api error'
+        if (!data.response) return app.apiError(data);
         var res = data.response,
             posts = res.posts,
             profiles = res.profiles;
@@ -884,7 +1081,7 @@ var app = (function() {
     getAlbumPageInfo: function(user, callback, params) {
       var code = tpl.get(tpl.CODE_ALBUM_PAGE, extend({user: user, need_viewer: !viewer.uid}, getZCodeData(params)));
       VK.api('execute', {code: code}, function(data) {
-        if (!data.response) return; // ToDo: error msg 'api error'
+        if (!data.response) return app.apiError(data);
         if (!data.response.info.user) return; // ToDo: error msg 'user not found'
         var res = data.response,
             info = res.info,
@@ -902,6 +1099,7 @@ var app = (function() {
         current.mode = 'photos';
         var user_info = current.user_info = parseUserInfo(info);
         var album_info = parseAlbumInfo(album);
+        current.user_info.photos_count = album_info.photos_count;
         var tpl_data = extend({album_page: true}, user_info, album_info);
         var html = tpl.get(tpl.UI_CONTAINER, tpl_data);
         callback && callback(html, extend(params, res.z));
@@ -910,11 +1108,12 @@ var app = (function() {
     getAlbumInfoOnly: function(user, callback) {
       var code = tpl.get(tpl.CODE_ALBUM_INFO_ONLY, {user_id: user});
       VK.api('execute', {code: code}, function(data) {
-        if (!data.response) return; // ToDo: error msg 'api error'
+        if (!data.response) return app.apiError(data);
         var res = data.response,
             album = res.album;
         current.mode = 'photos';
         var album_info = parseAlbumInfo(album);
+        current.user_info.photos_count = album_info.photos_count;
         var tpl_data = extend(current.user_info, album_info);
         var html = tpl.get(tpl.UI_ALBUM_BODY, tpl_data);
         callback && callback(html);
@@ -925,7 +1124,7 @@ var app = (function() {
       a && (a.innerHTML = '<span></span>');
       var code = tpl.get(tpl.CODE_COMMENTS, {owner_id: current.user_id, post_id: post_id, all: show});
       VK.api('execute', {code: code}, function(data) {
-        if (!data.response) return; // ToDo: error msg 'api error'
+        if (!data.response) return app.apiError(data);
         var res = data.response,
             cmnts = res.comments,
             profiles = res.profiles,
@@ -1000,7 +1199,7 @@ var app = (function() {
       VK.api('execute', {code: code}, function(data) {
         wp_in_progress = false;
         a && (a.innerHTML = 'previous posts');
-        if (!data.response) return; // ToDo: error msg 'api error'
+        if (!data.response) return app.apiError(data);
         var res = data.response,
             posts = res.posts,
             profiles = res.profiles;
@@ -1015,6 +1214,13 @@ var app = (function() {
         }
       });
       return false;
+    },
+    apiError: function(data) {
+      if (data && data.error) {
+        if (data.error.error_code == 5) {
+          hard_nav(location.href);
+        }
+      }
     }
   };
 })();

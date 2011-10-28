@@ -1,17 +1,18 @@
 var ui_tpls = {
   UI_CONTAINER:
 '<div id="page_header_bg">' +
+  '<div class="pin" onclick="hasClass(\'header_fixed\', document.body) ? (removeClass(\'header_fixed\', document.body), this.innerHTML = \'Pin\') : (addClass(\'header_fixed\', document.body), this.innerHTML = \'Unpin\');">Unpin</div>' +
   '<div id="page_header">' +
     '<a href="/" class="left_side" onclick="return app.nav(this, event);">' +
       '<div class="icon"></div>' +
       '<div class="title">{viewer_fullname}</div>' +
     '</a>' +
     '<div class="right_side">' +
-      '<div class="top_search"><input id="header_search" type="text" value="Search..." /></div>' +
+      '<div class="top_search"><input id="header_search" type="text" placeholder="Search..." value="" /></div>' +
       '<ul class="top_links">' +
-        '<li><a href="#" onclick="return false;">Newsfeed</a></li>' +
-        '<li><a href="#" onclick="return false;">Feedback</a></li>' +
-        '<li><a href="#" onclick="return false;">Messages</a></li>' +
+        '<li><a href="/feed" onclick="return false;">Newsfeed</a></li>' +
+        '<li><a href="/support" onclick="return false;">Feedback</a></li>' +
+        '<li><a href="/mail" onclick="return false;">Messages</a></li>' +
       '</ul>' +
     '</div>' +
   '</div>' +
@@ -27,10 +28,10 @@ var ui_tpls = {
     '{is_friend?{[<button class="gray_button">Remove from Friends</button>]}:{[<button class="blue_button">Add to Friends</button>]}}' +
   ']}}' +
   '{npva_counters_block?{[<hr />]}}' +
-  '{news_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">News</a><span>{news_cnt}</span></div></div>]}}' +
-  '{photos_cnt?{[<div id="photos_counter" class="profile_counter"><div class="counter_bg"><a href="{all_photos_link}" class="label" onclick="return app.nav(this, event);">Photos</a><span>{photos_cnt}</span></div></div>]}}' +
-  '{videos_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">Videos</a><span>{videos_cnt}</span></div></div>]}}' +
-  '{audios_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">Audio files</a><span>{audios_cnt}</span></div></div>]}}' +
+  '{news_cnt?{[<div class="profile_counter"><a href="/feed" class="counter_bg" onclick="return false;"><span class="label">News</span><span>{news_cnt}</span></a></div>]}}' +
+  '{photos_cnt?{[<div id="photos_counter" class="profile_counter"><a href="{all_photos_link}" class="counter_bg" onclick="return app.nav(this, event);"><span class="label">Photos</span><span>{photos_cnt}</span></a></div>]}}' +
+  '{videos_cnt?{[<div class="profile_counter"><a href="/video" class="counter_bg" onclick="return false;"><span class="label">Videos</span><span>{videos_cnt}</span></a></div>]}}' +
+  '{audios_cnt?{[<div class="profile_counter"><a href="/audio" class="counter_bg" onclick="return false;"><span class="label">Audio files</span><span>{audios_cnt}</span></a></div>]}}' +
   '{ff_counters_block?{[<hr />]}}' +
   '{friends_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">Friends</a><span>{friends_cnt}</span></div></div>]}}' +
   '{show_friends?{[<div class="users_tiles clearfix">{friends::UI_USER_TILE}</div>]}}' +
@@ -56,7 +57,7 @@ var ui_tpls = {
   '<div class="photos_tiles clearfix">{photos::UI_PHOTO_TILE}</div>' +
 ']}}' +
 '{show_posts?{[' +
-  '<div class="content_header">{can_post?{[<div class="post_field"><textarea>Write a public message...</textarea></div>]}:{[<h4>Wall</h4>]}}</div>' +
+  '<div class="content_header">{can_post?{[<div class="post_field"><textarea id="post_field" placeholder="Write a public message..."></textarea></div>]}:{[<h4>Wall</h4>]}}</div>' +
   '<div class="wall_posts">' +
     '{posts::UI_WALL_POST}' +
     '{show_more_posts?{[<div class="show_more posts"><a href="" onclick="return app.showMorePosts();">previous posts</a></div>]}}' +
@@ -83,6 +84,8 @@ var ui_tpls = {
   '</div>' +
   '<div class="post_column">' +
   '<a href="{user_link}" class="author" onclick="return app.nav(this, event);">{user_fullname}</a>' +
+  '{profile_photo_updated?{[<span class="explain">updated her profile picture:</span>]}}' +
+  '{repost?{[{repost::UI_WALL_REPOST_INFO}]}}' +
   '<div class="text">{text}</div>' +
   '{show_attachments?{[<div class="media_tiles{one_media?{[ one_media]}} clearfix">{attachments::UI_MEDIA_TILE}</div>]}}' +
   '{likes_count?{[<div class="like_count">{likes_count}</div>]}}' +
@@ -93,8 +96,18 @@ var ui_tpls = {
   ']}}' +
   '</div>' +
 '</div>',
+  UI_WALL_REPOST_INFO:
+'<div class="repost">' +
+  '<a href="{user_link}" class="repost_image" onclick="return app.nav(this, event);"><img src="{user_photo}" /></a>' +
+  '<div class="repost_info">' +
+    '<a href="{user_link}" class="author" onclick="return app.nav(this, event);">{user_fullname}</a>' +
+    '<div class="date">{post_date}</div>' +
+  '</div>' +
+'</div>',
   UI_SM_COMMENTS_LINK:
 '<a href="" onclick="return app.shComments(this, {post_id}, {show});">{show?{[Show {show_more_comments_label}]}:{[Hide comments]}}</a>',
+  UI_TEXT_CUT:
+'<span class="cut">{cut_text}</span><a href="" onclick="addClass(\'hide_cut\', this.parentNode); return false;">show all..</a><span>{full_text}</span>',
   UI_POST_COMMENT:
 '<div class="post_comment{i:{[ first]}}">' +
   '<div class="image_column">' +
@@ -121,11 +134,28 @@ var ui_tpls = {
 '</div>',
   UI_MEDIA_TILE:
 '<div class="media_tile {media_type}">' +
-  '<a href="{media_link}"{onclick?{[ onclick="{onclick}"]}}>' +
-    '{duration?{[<span>{duration}</span>]}}' +
-    '<img src="{media_src}" />' +
-  '</a>' +
+  '{photo?{[{photo::UI_MEDIA_PHOTO_TILE}]}}' +
+  '{graffiti?{[{graffiti::UI_MEDIA_GRAFFITI_TILE}]}}' +
+  '{video?{[{video::UI_MEDIA_VIDEO_TILE}]}}' +
+  '{audio?{[{audio::UI_MEDIA_AUDIO_TILE}]}}' +
+  '{note?{[{note::UI_MEDIA_NOTE_TILE}]}}' +
+  '{doc?{[{doc::UI_MEDIA_DOC_TILE}]}}' +
+  '{link?{[{link::UI_MEDIA_LINK_TILE}]}}' +
 '</div>',
+  UI_MEDIA_PHOTO_TILE:
+'<a href="{link}" onclick="{onclick}"><img src="{src}" /></a>',
+  UI_MEDIA_GRAFFITI_TILE:
+'<a href="{link}" target="_blank" /><img src="{src}" /></a>',
+  UI_MEDIA_VIDEO_TILE:
+'<a href="{link}" target="_blank" />{duration?{[<span>{duration}</span>]}}<img src="{src}" /></a>',
+  UI_MEDIA_AUDIO_TILE:
+'<a href="{link}" target="_blank" /><span class="performer">{performer}</span> - <span>{title}</span></a>',
+  UI_MEDIA_NOTE_TILE:
+'<a href="{link}" target="_blank" /><span class="explain">Note</span><span class="title">{title}</span></a>',
+  UI_MEDIA_DOC_TILE:
+'<a href="{link}" target="_blank" /><span class="explain">File</span><span class="title">{title}</span></a>',
+  UI_MEDIA_LINK_TILE:
+'<a href="{url}" target="_blank" /><span class="explain">Link:</span><span class="title">{title}</span></a>',
   UI_PHOTO_VIEW:
 '<div id="pv_bg"></div>' +
 '<div id="pv_layout">' +
@@ -173,20 +203,29 @@ var code_tpls = {
 'var ' +
 'pp=API.wall.get({owner_id:i,offset:{posts_offset?{["{posts_offset}"]}:{[0]}},count:10,extended:1}),' +
 'w=pp.wall,' +
-'pw=[' +
-  'w[0],' +
-  'w[1]+{comments: API.wall.getComments({owner_id:i,post_id:w[1].id,sort:"desc",count:3})},' +
-  'w[2]+{comments: API.wall.getComments({owner_id:i,post_id:w[2].id,sort:"desc",count:3})},' +
-  'w[3]+{comments: API.wall.getComments({owner_id:i,post_id:w[3].id,sort:"desc",count:3})},' +
-  'w[4]+{comments: API.wall.getComments({owner_id:i,post_id:w[4].id,sort:"desc",count:3})},' +
-  'w[5]+{comments: API.wall.getComments({owner_id:i,post_id:w[5].id,sort:"desc",count:3})},' +
-  'w[6]+{comments: API.wall.getComments({owner_id:i,post_id:w[6].id,sort:"desc",count:3})},' +
-  'w[7]+{comments: API.wall.getComments({owner_id:i,post_id:w[7].id,sort:"desc",count:3})},' +
-  'w[8]+{comments: API.wall.getComments({owner_id:i,post_id:w[8].id,sort:"desc",count:3})},' +
-  'w[9]+{comments: API.wall.getComments({owner_id:i,post_id:w[9].id,sort:"desc",count:3})},' +
-  'w[10]+{comments: API.wall.getComments({owner_id:i,post_id:w[10].id,sort:"desc",count:3})}' +
+'c=[' +
+  'API.wall.getComments({owner_id:i,post_id:w[1].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[2].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[3].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[4].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[5].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[6].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[7].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[8].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[9].id,sort:"desc",count:3}),' +
+  'API.wall.getComments({owner_id:i,post_id:w[10].id,sort:"desc",count:3})' +
 '],' +
-'c=pw@.comments,' +
+'rd=API.wall.getById({posts:' +
+  'w[1].copy_owner_id+"_"+w[1].copy_post_id+","+' +
+  'w[2].copy_owner_id+"_"+w[2].copy_post_id+","+' +
+  'w[3].copy_owner_id+"_"+w[3].copy_post_id+","+' +
+  'w[4].copy_owner_id+"_"+w[4].copy_post_id+","+' +
+  'w[5].copy_owner_id+"_"+w[5].copy_post_id+","+' +
+  'w[6].copy_owner_id+"_"+w[6].copy_post_id+","+' +
+  'w[7].copy_owner_id+"_"+w[7].copy_post_id+","+' +
+  'w[8].copy_owner_id+"_"+w[8].copy_post_id+","+' +
+  'w[9].copy_owner_id+"_"+w[9].copy_post_id+","+' +
+  'w[10].copy_owner_id+"_"+w[10].copy_post_id}),' + 
 'pu=' +
   'c[1]@.uid+c[2]@.uid+c[3]@.uid+c[4]@.uid+c[5]@.uid+' +
   'c[6]@.uid+c[7]@.uid+c[8]@.uid+c[9]@.uid+c[10]@.uid,' +
@@ -195,7 +234,7 @@ var code_tpls = {
   'c[5]@.reply_to_uid+c[6]@.reply_to_uid+' +
   'c[7]@.reply_to_uid+c[8]@.reply_to_uid+' +
   'c[9]@.reply_to_uid+c[10]@.reply_to_uid,' +
-'rp=pp+{wall:pw,dat_profiles:API.users.get({uids:[1]+gu,fields:"screen_name",name_case:"dat"})};',
+'rp=pp+{wall:w,comments:c,dat_profiles:API.users.get({uids:[1]+gu,fields:"screen_name",name_case:"dat"}),reposts_date:rd};',
   CODE_ALBUM_INFO_VARS:
 'var ' +
 'ra={' +
