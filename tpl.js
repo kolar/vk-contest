@@ -33,9 +33,9 @@ var ui_tpls = {
   '{videos_cnt?{[<div class="profile_counter"><a href="/video" class="counter_bg" onclick="return false;"><span class="label">Videos</span><span>{videos_cnt}</span></a></div>]}}' +
   '{audios_cnt?{[<div class="profile_counter"><a href="/audio" class="counter_bg" onclick="return false;"><span class="label">Audio files</span><span>{audios_cnt}</span></a></div>]}}' +
   '{ff_counters_block?{[<hr />]}}' +
-  '{friends_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">Friends</a><span>{friends_cnt}</span></div></div>]}}' +
+  '{friends_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="/friends" class="label" onclick="return false;">Friends</a><span>{friends_cnt}</span></div></div>]}}' +
   '{show_friends?{[<div class="users_tiles clearfix">{friends::UI_USER_TILE}</div>]}}' +
-  '{followers_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="#" class="label" onclick="return false;">Followers</a><span>{followers_cnt}</span></div></div>]}}' +
+  '{followers_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="/followers" class="label" onclick="return false;">Followers</a><span>{followers_cnt}</span></div></div>]}}' +
   '{show_followers?{[<div class="users_tiles clearfix">{followers::UI_USER_TILE}</div>]}}' +
 '</div>' +
 '<div id="page_body" class="right_column">' +
@@ -51,7 +51,7 @@ var ui_tpls = {
   '{user_birthday?{[<dt>Birthday:</dt><dd>{user_birthday}</dd>]}}' +
   '{user_relation?{[<dt>Relationship status:</dt><dd>{user_relation}</dd>]}}' +
 '</dl>]}}' +
-'{show_more_user_info?{[<div class="show_more_about"><a href="#" onclick="return false;">Show more about {user_firstname}</a></div>]}}' +
+'{show_more_user_info?{[<div class="show_more_about"><a href="" onclick="return false;">Show more about {user_firstname}</a></div>]}}' +
 '{show_photos?{[' +
   '<div class="content_header"><a href="{all_photos_link}" class="all_link" onclick="return app.nav(this, event);">View all Photos</a><h4>Photos</h4></div>' +
   '<div class="photos_tiles clearfix">{photos::UI_PHOTO_TILE}</div>' +
@@ -67,7 +67,7 @@ var ui_tpls = {
 '<div class="page_header">' +
   '<div class="photos_header">' +
     '<span id="photos_count_label">{photos_count}</span>' +
-    '<span id="albums_count_label"><a href="#" onclick="return false;">{albums_count}</a></span>' +
+    '<span id="albums_count_label"><a href="/albums" onclick="return false;">{albums_count}</a></span>' +
   '</div>' +
   '<button onclick="app.nav(\'{profile_link}\');"><span>&lsaquo;</span><div>Back to Profile</div></button>' +
 '</div>' +
@@ -109,7 +109,7 @@ var ui_tpls = {
   UI_TEXT_CUT:
 '<span class="cut">{cut_text}</span><a href="" onclick="addClass(\'hide_cut\', this.parentNode); return false;">show all..</a><span>{full_text}</span>',
   UI_POST_COMMENT:
-'<div class="post_comment{i:{[ first]}}">' +
+'<div id="{comment_id}" class="post_comment{i:{[ first]}}">' +
   '<div class="image_column">' +
     '<a href="{user_link}" onclick="return app.nav(this, event);"><img src="{user_photo}" /></a>' +
   '</div>' +
@@ -119,7 +119,7 @@ var ui_tpls = {
     '{likes_count?{[<div class="like_count">{likes_count}</div>]}}' +
     '<div class="links">' +
       '<span class="date">{post_date}</span>' +
-      '{reply_to_link?{[<span class="delim">-</span><a href="{reply_to_link}" class="reply_to" onclick="return false;">{reply_to_firstname}</a>]}}' +
+      '{reply_to_link?{[<span class="delim">-</span><a href="{reply_to_link}" class="reply_to"{reply_onclick?{[ onclick="{reply_onclick}"]}}>{reply_to_firstname}</a>]}}' +
     '</div>' +
   '</div>' +
 '</div>',
@@ -227,13 +227,13 @@ var code_tpls = {
   'w[9].copy_owner_id+"_"+w[9].copy_post_id+","+' +
   'w[10].copy_owner_id+"_"+w[10].copy_post_id}),' + 
 'pu=' +
-  'c[1]@.uid+c[2]@.uid+c[3]@.uid+c[4]@.uid+c[5]@.uid+' +
-  'c[6]@.uid+c[7]@.uid+c[8]@.uid+c[9]@.uid+c[10]@.uid,' +
-'gu=c[1]@.reply_to_uid+c[2]@.reply_to_uid+' +
-  'c[3]@.reply_to_uid+c[4]@.reply_to_uid+' +
-  'c[5]@.reply_to_uid+c[6]@.reply_to_uid+' +
-  'c[7]@.reply_to_uid+c[8]@.reply_to_uid+' +
-  'c[9]@.reply_to_uid+c[10]@.reply_to_uid,' +
+  'c[0]@.uid+c[1]@.uid+c[2]@.uid+c[3]@.uid+c[4]@.uid+' +
+  'c[5]@.uid+c[6]@.uid+c[7]@.uid+c[8]@.uid+c[9]@.uid,' +
+'gu=c[0]@.reply_to_uid+c[1]@.reply_to_uid+' +
+  'c[2]@.reply_to_uid+c[3]@.reply_to_uid+' +
+  'c[4]@.reply_to_uid+c[5]@.reply_to_uid+' +
+  'c[6]@.reply_to_uid+c[7]@.reply_to_uid+' +
+  'c[8]@.reply_to_uid+c[9]@.reply_to_uid,' +
 'rp=pp+{wall:w,comments:c,dat_profiles:API.users.get({uids:[1]+gu,fields:"screen_name",name_case:"dat"}),reposts_date:rd};',
   CODE_ALBUM_INFO_VARS:
 'var ' +

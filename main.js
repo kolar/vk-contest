@@ -267,6 +267,13 @@ function removeEvent(elem, types, handler) {
     }
   }
 }
+function offsetY(o) {
+  o = ge(o);
+  if (!o) return 0;
+  var y = o.offsetTop;
+  while (o = o.offsetParent) y += o.offsetTop;
+  return y;
+}
 
 function placeholderSetup(id, pc, tc) {
   var elem = ge(id);
@@ -387,9 +394,9 @@ function formatDate(timestamp, options) {
   }
   return darr.join(' at ');
 }
-function makeReplyLink(text, reply_to_uid, reply_to_cid) {
-  if (!reply_to_uid) return text;
-  return text ? text.toString().replace(new RegExp('^\\[id(' + intval(reply_to_uid) + ')\\|([^\\]]+)\\]'), '<a href="/' + app.user(reply_to_uid).screen_name + '" class="reply_to" onclick="return false;">$2</a>') : '';
+function makeReplyLink(text, reply_to) {
+  if (!reply_to.uid) return text;
+  return text ? text.toString().replace(new RegExp('^\\[id(' + intval(reply_to.uid) + ')\\|([^\\]]+)\\]'), '<a href="/' + app.user(reply_to.uid).screen_name + '" class="reply_to" onclick="return app.highlightComment(this, ' + reply_to.post_id + ', ' + reply_to.cid + ');">$2</a>') : '';
 }
 function cutText(text) {
   var original_text = rehtsc(br2nl(text)),
@@ -488,6 +495,7 @@ var VK = (function() {
       }
       var cid = ++nextCallbackId;
       this._callbacks[cid] = function(data) {
+        window.console && console.log && console.log(cid + ': ', data);
         callback && callback(data);
         deleteCallback(cid);
       }
@@ -551,7 +559,7 @@ var app = (function() {
     } else if (m = /^\/([a-z0-9_.]+)$/i.exec(path)) {
       app.openProfile(m[1], params, no_push);
     } else {
-      return true;
+      return app.invalidLink();
     }
     return false;
   }
@@ -811,12 +819,14 @@ var app = (function() {
             user = getUser(comment.uid), reply_user = getUser(comment.reply_to_uid),
             reply_text = reply_user && ((ru ? '' : 'to ') + (reply_user.dat && reply_user.dat.first_name || reply_user.first_name || ''));
         comments.push(extend({
+          comment_id: 'comment' + comment.cid,
           user_link: '/' + user.screen_name,
           user_photo: user.photo,
           user_fullname: user.name,
-          text: prepareText(makeReplyLink(comment.text, comment.reply_to_uid, comment.reply_to_cid)),
+          text: prepareText(makeReplyLink(comment.text, {post_id: post.id, uid: comment.reply_to_uid, cid: comment.reply_to_cid})),
           post_date: formatDate(comment.date),
           reply_to_link: comment.reply_to_uid ? '/' + reply_user.screen_name : '',
+          reply_onclick: 'return app.highlightComment(this, ' + post.id + ', ' + comment.reply_to_cid + ');',
           reply_to_firstname: comment.reply_to_uid ? reply_text : ''
         }, comments_count <= 3 ? {i:1} : {}));
       }
@@ -892,6 +902,7 @@ var app = (function() {
   }
   function parseZParams(params) {
     if (params && params.z) {
+      current.params = params;
       var photo_params = /^photo((-?[0-9]+)_[0-9]+)(?:\/(.*))?$/i.exec(params.z);
       if (photo_params) {
         return {
@@ -951,9 +962,9 @@ var app = (function() {
   
   onBodyResize(function() {
     var pc = ge('content'), ph = ge('page_header'), pvc = ge('pv_container'),
-        cw = Math.max(window.innerWidth, htmlNode.clientWidth);
+        cw = app.cw() - sbWidth();
     if (pc && ph) {
-      pc.style.marginLeft = ph.style.marginLeft = Math.floor((cw - sbWidth() - pc.offsetWidth) / 2) + 'px';
+      pc.style.marginLeft = ph.style.marginLeft = Math.floor((cw - pc.offsetWidth) / 2) + 'px';
     }
     if (pvc) {
       pvc.style.width = cw + 'px';
@@ -964,7 +975,7 @@ var app = (function() {
     var sm_photos = geByClass1('show_more photos', 'album_page'),
         sm_posts = geByClass1('show_more posts', 'profile_page'),
         sh = Math.max(htmlNode.scrollHeight, bodyNode.scrollHeight),
-        ch = Math.max(window.innerHeight, htmlNode.clientHeight),
+        ch = app.ch(),
         scroll_bottom = sh - st - ch;
     if (scroll_bottom < 300) {
       if (current.mode == 'profile' && sm_posts) {
@@ -980,9 +991,18 @@ var app = (function() {
     nav: nav,
     current: current,
     user: getUser,
+    cw: function(){
+      return Math.max(window.innerWidth, htmlNode.clientWidth);
+    },
+    ch: function(){
+      return Math.max(window.innerHeight, htmlNode.clientHeight);
+    },
     scroll: function(to) {
-      if (htmlNode) htmlNode.scrollTop = to || 0;
-      if (bodyNode) bodyNode.scrollTop = to || 0;
+      if (typeof to !== 'undefined'){
+        if (htmlNode) htmlNode.scrollTop = to || 0;
+        if (bodyNode) bodyNode.scrollTop = to || 0;
+      }
+      return htmlNode.scrollTop || bodyNode.scrollTop || window.scrollY || 0;
     },
     openProfile: function(user, params, no_push) {
       var uid = getUser(user).uid, z_params = parseZParams(params);
@@ -996,7 +1016,7 @@ var app = (function() {
       if (current.user_id != uid) {
         photo.saveSource('photos' + app.current.user_id, null);
       }
-      method.call(this, user, function(html, z) {
+      method.call(this, part ? uid : user, function(html, z) {
         if (app.current.link == '/') {
           app.nav('/' + getUser(current.user_id).screen_name, null, {replace: true, push_only: true});
         }
@@ -1025,7 +1045,7 @@ var app = (function() {
       if (current.user_id != uid) {
         photo.saveSource('photos' + app.current.user_id, null);
       }
-      method.call(this, user, function(html, z) {
+      method.call(this, part ? uid : user, function(html, z) {
         onDOMReady(function() {
           setTitle(current.user_info.user_fullname + '\'s Photos | ' + current.user_info.photos_count);
           ge(part ? 'page_body' : 'container').innerHTML = html;
@@ -1041,7 +1061,7 @@ var app = (function() {
       var code = tpl.get(tpl.CODE_PROFILE_PAGE, extend({user: user, need_viewer: !viewer.uid}, getZCodeData(params)));
       VK.api('execute', {code: code}, function(data) {
         if (!data.response) return app.apiError(data);
-        if (!data.response.info.user.uid) return; // ToDo: error msg 'user not found'
+        if (!data.response.info.user.uid) return app.invalidLink();
         var res = data.response,
             info = res.info,
             posts = res.posts,
@@ -1082,7 +1102,7 @@ var app = (function() {
       var code = tpl.get(tpl.CODE_ALBUM_PAGE, extend({user: user, need_viewer: !viewer.uid}, getZCodeData(params)));
       VK.api('execute', {code: code}, function(data) {
         if (!data.response) return app.apiError(data);
-        if (!data.response.info.user) return; // ToDo: error msg 'user not found'
+        if (!data.response.info.user) return app.invalidLink();
         var res = data.response,
             info = res.info,
             album = res.album,
@@ -1119,8 +1139,10 @@ var app = (function() {
         callback && callback(html);
       });
     },
-    shComments: function(a, post_id, show) {
+    shComments: function(a, post_id, show, cid) {
       var sm_cont = a.parentNode, comments_cont = geByClass1('post_comments', sm_cont.parentNode);
+      if (!show === !hasClass('shown_all', sm_cont)) return false;
+      (show ? addClass : removeClass)('shown_all', sm_cont);
       a && (a.innerHTML = '<span></span>');
       var code = tpl.get(tpl.CODE_COMMENTS, {owner_id: current.user_id, post_id: post_id, all: show});
       VK.api('execute', {code: code}, function(data) {
@@ -1142,12 +1164,14 @@ var app = (function() {
               user = getUser(comment.uid), reply_user = getUser(comment.reply_to_uid),
               reply_text = reply_user && ((ru ? '' : 'to ') + (reply_user.dat && reply_user.dat.first_name || reply_user.first_name || ''));
           comments.push(extend({
+            comment_id: 'comment' + comment.cid,
             user_link: '/' + user.screen_name,
             user_photo: user.photo,
             user_fullname: user.name,
-            text: prepareText(makeReplyLink(comment.text, comment.reply_to_uid, comment.reply_to_cid)),
+            text: prepareText(makeReplyLink(comment.text, {post_id: post_id, uid: comment.reply_to_uid, cid: comment.reply_to_cid})),
             post_date: formatDate(comment.date),
             reply_to_link: comment.reply_to_uid ? '/' + reply_user.screen_name : '',
+            reply_onclick: 'return app.highlightComment(this, ' + post_id + ', ' + comment.reply_to_cid + ');',
             reply_to_firstname: comment.reply_to_uid ? reply_text : ''
           }, hide_sm_link ? {i:1} : {}));
         }
@@ -1157,6 +1181,7 @@ var app = (function() {
           sm_cont.innerHTML = tpl.get(tpl.UI_SM_COMMENTS_LINK, {show: !show, post_id: post_id, show_more_comments_label: comments_count > 100 ? 'last 100 replies of ' + comments_count : 'all ' + comments_count + ' replies'});
         }
         comments_cont.innerHTML = tpl.get(tpl.UI_POST_COMMENT, comments);
+        cid && app.highlightComment(null, post_id, cid);
       });
       return false;
     },
@@ -1215,12 +1240,34 @@ var app = (function() {
       });
       return false;
     },
+    highlightComment: function(a, post_id, cid) {
+      var cmnt = ge('comment' + cid);
+      if (cmnt) {
+        var y = offsetY(cmnt), st = app.scroll(), fy = y - st;
+        if (fy < 100) app.scroll(y - 100);
+        var ch = app.ch(), sb = ch + st,
+            by = y + cmnt.offsetHeight, fby = sb - by;
+        if (fby < 100) app.scroll(by + 100 - ch);
+        addClass('highlight', cmnt);
+        setTimeout(function(){ removeClass('highlight', cmnt); }, 1200);
+      } else if (a) {
+        var wp = a.parentNode;
+        while (wp && !hasClass('wall_post', wp)) wp = wp.parentNode;
+        var sm = geByTag1('a', geByClass1('show_more comments', wp));
+        sm && app.shComments(sm, post_id, true, cid);
+      }
+      return false;
+    },
     apiError: function(data) {
       if (data && data.error) {
         if (data.error.error_code == 5) {
           hard_nav(location.href);
         }
       }
+    },
+    invalidLink: function() {
+      hard_nav('http://vkontakte.ru' + current.link, null, {replace: true});
+      return false;
     }
   };
 })();

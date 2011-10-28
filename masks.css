@@ -84,3 +84,10 @@
 #photo_container {
   margin: 0 0 0 515px;
 }
+
+.page_content .show_more {
+  margin-right: -2px;
+}
+.media_tiles .media_tile img {
+  max-height: 130px;
+}

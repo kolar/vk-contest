@@ -76,9 +76,23 @@ var photo = (function() {
   }
   
   function setImageSize() {
-    var w = this.width || 0, h = this.height || 0;
+    if (!current.image.w) current.image.w = this.width || 0;
+    if (!current.image.h) current.image.h = this.height || 0;
+    var w = current.image.w, h = current.image.h;
     if (!w || !h) return;
-    pc.style.width = pf.style.width = w + 'px';
+    var maxW = app.cw() - sbWidth() - 210, maxH = app.ch() - 110;
+    var minW = 604, minH = 453;
+    if (maxW < w || maxH < h) {
+      var sw = maxW / w, sh = maxH / h,
+          s = Math.min(sw, sh);
+      w = Math.round(w * s); h = Math.round(h * s);
+      if (minW > w && minH > h) {
+        var sw = minW / w, sh = minH / h,
+            s = Math.min(sw, sh);
+        w = Math.round(w * s); h = Math.round(h * s);
+      }
+    }
+    pi.style.width = pc.style.width = pf.style.width = w + 'px';
     pb.style.height = pf.style.height = h + 'px';
   }
   var current = {
@@ -91,29 +105,32 @@ var photo = (function() {
   };
   function setPhoto(num, no_push, replace) {
     var source = current.source, p = source[num];
-    if (!p) {
+    if (p) {
+      pvl.scrollTop = 0;
+      var photo_link = 'photo' + p.id, photo_src = p.src_xxbig || p.src_xbig || p.src_big;
+      pb.href = '/' + photo_link;
+      if (pi && pi.src != photo_src) {
+        pi.onstartload = pi.onload = null;
+        remove(pi);
+        current.image = {};
+        pi = ce('img', {src: photo_src, alt: ''});
+        pi.onstartload = pi.onload = setImageSize;
+        pimg.appendChild(pi);
+        detectstartload(pi);
+      }
+      ps.innerHTML = source.length > 1 ? 'Photo ' + (num + 1) + ' of ' + source.length : 'Photo';
+      pd.innerHTML = prepareText(p.text || '');
+      var url = app.current.mode == 'profile' ?
+        '?z=' + photo_link + '/' + current.source_name + (
+          current.source_type == 'photos' ? '&n=' + current.num : ''
+        ) :
+        '/' + photo_link + '?n=' + current.num;
+      !no_push && app.nav(url, null, {push_only: true, replace: replace});
+    } else {
+      current.image = {};
       pi.src = LOADING_IMG;
-      return;
+      setImageSize.call(pi);
     }
-    pvl.scrollTop = 0;
-    var photo_link = 'photo' + p.id, photo_src = p.src_xxbig || p.src_xbig || p.src_big;
-    pb.href = '/' + photo_link;
-    if (pi && pi.src != photo_src) {
-      pi.onstartload = pi.onload = null;
-      remove(pi);
-      pi = ce('img', {src: photo_src, alt: ''});
-      pi.onstartload = pi.onload = setImageSize;
-      pimg.appendChild(pi);
-      detectstartload(pi);
-    }
-    ps.innerHTML = source.length > 1 ? 'Photo ' + (num + 1) + ' of ' + source.length : 'Photo';
-    pd.innerHTML = prepareText(p.text || '');
-    var url = app.current.mode == 'profile' ?
-      '?z=' + photo_link + '/' + current.source_name + (
-        current.source_type == 'photos' ? '&n=' + current.num : ''
-      ) :
-      '/' + photo_link + '?n=' + current.num;
-    !no_push && app.nav(url, null, {push_only: true, replace: replace});
     if (!current.one) {
       preloadPhotos();
       preloadImages();
@@ -218,6 +235,12 @@ var photo = (function() {
     !no_push && app.nav(return_url, null, {push_only: true});
   }
   
+  onBodyResize(function() {
+    if (!pvc) return;
+    if (!hasClass('photo_view', htmlNode)) return;
+    pi && setImageSize.call(pi);
+  });
+  
   return {
     save: savePhoto,
     get: getPhoto,
@@ -231,13 +254,22 @@ var photo = (function() {
       current.source = getSource(current.source_name);
       current.num = getNum(p, current.source);
       if (current.num === -1) {
-        current.source_type = 'photo';
-        current.source = [getPhoto(p)];
-        current.num = 0;
+        var ph = getPhoto(p);
+        if (ph.id) {
+          current.source_type = 'photo';
+          current.source = [ph];
+          current.num = 0;
+        } else {
+          if (typeof app.current.params.n !== 'undefined') {
+            current.num = +app.current.params.n;
+          } else {
+            return false;
+          }
+        }
       }
       current.one = current.source.length < 2;
       current.all = false;
-      var no_photo = p != current.source[current.num].id;
+      var no_photo = current.source[current.num] && (p != current.source[current.num].id);
       setPhoto(current.num, no_push && !no_photo, no_photo);
       show();
       pvl.scrollTop = 0;

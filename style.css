@@ -403,7 +403,6 @@ button::-moz-focus-inner {
 .wall_posts .wall_post {
   position: relative;
   padding-top: 10px;
-  margin-top: 11px;
   border-top: 1px solid #ededed;
   clear: left;
 }
@@ -413,7 +412,6 @@ button::-moz-focus-inner {
   border-top: none;
 }
 .wall_post .image_column {
-  /*float: left;*/
   position: absolute;
   padding: 2px 0 11px 1px;
 }
@@ -457,7 +455,10 @@ button::-moz-focus-inner {
   color: #222;
 }
 .wall_post .post_column .links {
-  padding: 2px 0 0 2px;
+  padding: 2px 0 11px 2px;
+}
+.wall_post .post_comments .post_column .links {
+  padding-bottom: 0;
 }
 .wall_post .post_column .links .delim {
   padding: 0 3px;
@@ -475,8 +476,8 @@ button::-moz-focus-inner {
   font-size: 13px;
 }
 .page_content .show_more {
-/*  width: 524px;*/ height: 34px;
-  margin: 11px 0 10px; padding: 1px;
+  height: 34px;
+  margin: 0; padding: 1px;
   background-color: #dedede;
   background: -moz-linear-gradient(top, #e4e4e4, #d9d9d9);
   background: -webkit-gradient(linear, left top, left bottom, from(#e4e4e4), to(#d9d9d9));
@@ -512,14 +513,18 @@ button::-moz-focus-inner {
   padding: 0 4px 2px 0;
 }
 .post_comments .post_comment {
-  padding-top: 10px;
-  margin-top: 11px;
+  padding: 10px 0 11px;
   border-top: 1px solid #ededed;
+  background-color: #fff;
+  -moz-transition: background-color 0.2s ease;
+  -webkit-transition: background-color 0.2s ease;
+  -o-transition: background-color 0.2s ease;
 }
 .post_comments .post_comment.first {
-  padding-top: 0;
-  margin-top: 0;
   border-top: none;
+}
+.post_comments .post_comment.highlight {
+  background-color: #f7f7f7;
 }
 .wall_post .post_column .post_comment .like_count {
   margin-right: 1px;
@@ -708,10 +713,6 @@ html.photo_view,
 html.photo_view body {
   overflow: hidden;
 }
-/*body.photo_view #page_header,
-body.photo_view #content {
-  padding-right: 17px;
-}*/
 html.photo_view #pv_bg,
 html.photo_view #pv_layout {
   display: block;
@@ -801,21 +802,6 @@ html.photo_view #pv_layout {
   margin: auto;
   overflow: hidden;
 }
-#photo_container {
-  -moz-transition: width 0.07s ease;
-  -webkit-transition: width 0.07s ease;
-  -o-transition: width 0.07s ease;
-}
-#photo_container .photo_box {
-  -moz-transition: height 0.07s ease;
-  -webkit-transition: height 0.07s ease;
-  -o-transition: height 0.07s ease;
-}
-/*#photo_container .photo_box .photo_frame {
-  -moz-transition: width 0.07s ease, height 0.07s ease;
-  -webkit-transition: width 0.07s ease, height 0.07s ease;
-  -o-transition: width 0.07s ease, height 0.07s ease;
-}*/
 #photo_container .photo_box .img {
   border-radius: 4px;
   overflow: hidden;
@@ -844,7 +830,7 @@ html.photo_view #pv_layout {
 }
 
 .pin {
-  float: right;
+  position: absolute; right: 0;
   font-weight: bold;
   padding: 5px 13px 8px;
   margin: 10px;
