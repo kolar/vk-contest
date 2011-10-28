@@ -991,7 +991,9 @@ var app = (function() {
   // back2top
   var last_st_position = 0;
   onBodyScroll(function(st) {
-    var back2top = geByClass1('back2top', 'container');
+    var back2top = geByClass1('back2top', 'container'),
+        icon = geByTag1('div', back2top);
+    icon.style.marginTop = hasClass('header_fixed', bodyNode) ? '63px' : Math.max(15, (63 - st)) + 'px';
     if (st < 400) {
       back2top.style.display = last_st_position ? 'block' : 'none';
       back2top.style.opacity = last_st_position ? 1 : 0;
@@ -1314,7 +1316,7 @@ var ui_tpls = {
   UI_CONTAINER:
 '<div class="back2top" onclick="app.scrollToTop();"><div>Back to Top</div></div>' +
 '<div id="page_header_bg">' +
-  '<div class="pin" onclick="hasClass(\'header_fixed\', document.body) ? (removeClass(\'header_fixed\', document.body), this.innerHTML = \'Pin\') : (addClass(\'header_fixed\', document.body), this.innerHTML = \'Unpin\');">Unpin</div>' +
+  '<div class="pin" onclick="hasClass(\'header_fixed\', document.body) ? (removeClass(\'header_fixed\', document.body), this.innerHTML = \'Pin\') : (addClass(\'header_fixed\', document.body), this.innerHTML = \'Unpin\'); onBodyScroll(true);">Unpin</div>' +
   '<div id="page_header">' +
     '<a href="/" class="left_side" onclick="return app.nav(this, event);">' +
       '<div class="icon"></div>' +
