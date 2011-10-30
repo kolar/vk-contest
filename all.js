@@ -599,12 +599,12 @@ var app = (function() {
       user.gid && (user.uid = -user.gid);
       if (!usersMap[user.uid]) {
         usersMap[user.uid] = {
-          screen_name: (user.gid ? 'club' + user.gid : 'id' + user.uid)
+          screen_name: (user.gid ? (user.type || 'club') + user.gid : 'id' + user.uid)
         };
       }
       var u = extend(usersMap[user.uid], user);
       extend(u, u.gid ? {} : {name: u.first_name + ' ' + u.last_name});
-      usersMap[u.screen_name] = usersMap[u.gid ? 'club' + u.gid : 'id' + u.uid] = u;
+      usersMap[u.screen_name] = usersMap[u.gid ? (u.type || 'club') + u.gid : 'id' + u.uid] = u;
     }
   }
   function getUser(uid) {
@@ -719,7 +719,7 @@ var app = (function() {
           comments_count = cmnts.shift() || 0,
           comments = [],
           repost = null;
-      if (post.copy_post_id) {
+      if (post.copy_owner_id) {
         var repost_user = getUser(post.copy_owner_id),
             repost_date = repostsDateMap[post.copy_post_id];
         repost = {
@@ -814,7 +814,7 @@ var app = (function() {
         photo.saveSource(source_name, photo_attachments);
         attachments = top_attachments.concat(bottom_attachments);
       }
-      var ru = getUser(1).first_name == 'Οΰβελ';
+      var ru = getUser(1).first_name == 'ΠΠ°Π²ΠµΠ»';
       for (var j = cmnts.length - 1; j >= 0; j--) {
         var comment = cmnts[j],
             user = getUser(comment.uid), reply_user = getUser(comment.reply_to_uid),
@@ -1066,6 +1066,7 @@ var app = (function() {
           //initAdjustHeight('post_field', 0, 16);
           onBodyResize(true);
           removeClass('selected', 'photos_counter');
+          ge('ff_block').style.display = 'block';
           app.scroll(0);
           z && parseZInfo(z);
         });
@@ -1090,6 +1091,7 @@ var app = (function() {
           placeholderSetup('header_search', '#111', '#111');
           onBodyResize(true);
           addClass('selected', 'photos_counter');
+          ge('ff_block').style.display = 'none';
           app.scroll(0);
           z && parseZInfo(z);
         });
@@ -1196,7 +1198,7 @@ var app = (function() {
         }
         var comments = [], comments_count = cmnts.shift() || 0,
             hide_sm_link = comments_count <= 3 || comments_count <= 5 && show;
-        var ru = getUser(1).first_name == 'Οΰβελ';
+        var ru = getUser(1).first_name == 'ΠΠ°Π²ΠµΠ»';
         for (var i = cmnts.length - 1; i >= 0; i--) {
           var comment = cmnts[i],
               user = getUser(comment.uid), reply_user = getUser(comment.reply_to_uid),
@@ -1299,6 +1301,7 @@ var app = (function() {
     apiError: function(data) {
       if (data && data.error) {
         if (data.error.error_code == 5) {
+          cookie.set('access_token');
           hard_nav(location.href);
         }
       }
@@ -1347,11 +1350,13 @@ var ui_tpls = {
   '{photos_cnt?{[<div id="photos_counter" class="profile_counter"><a href="{all_photos_link}" class="counter_bg" onclick="return app.nav(this, event);"><span class="label">Photos</span><span>{photos_cnt}</span></a></div>]}}' +
   '{videos_cnt?{[<div class="profile_counter"><a href="/video" class="counter_bg" onclick="return false;"><span class="label">Videos</span><span>{videos_cnt}</span></a></div>]}}' +
   '{audios_cnt?{[<div class="profile_counter"><a href="/audio" class="counter_bg" onclick="return false;"><span class="label">Audio files</span><span>{audios_cnt}</span></a></div>]}}' +
+  '<div id="ff_block">' +
   '{ff_counters_block?{[<hr />]}}' +
   '{friends_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="/friends" class="label" onclick="return false;">Friends</a><span>{friends_cnt}</span></div></div>]}}' +
   '{show_friends?{[<div class="users_tiles clearfix">{friends::UI_USER_TILE}</div>]}}' +
   '{followers_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="/followers" class="label" onclick="return false;">Followers</a><span>{followers_cnt}</span></div></div>]}}' +
   '{show_followers?{[<div class="users_tiles clearfix">{followers::UI_USER_TILE}</div>]}}' +
+  '</div>' +
 '</div>' +
 '<div id="page_body" class="right_column">' +
   '{profile_page?{[{UI_PROFILE_BODY}]}}' +

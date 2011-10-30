@@ -2,7 +2,7 @@ var ui_tpls = {
   UI_CONTAINER:
 '<div class="back2top" onclick="app.scrollToTop();"><div>Back to Top</div></div>' +
 '<div id="page_header_bg">' +
-  '<div class="pin" onclick="hasClass(\'header_fixed\', document.body) ? (removeClass(\'header_fixed\', document.body), this.innerHTML = \'Pin\') : (addClass(\'header_fixed\', document.body), this.innerHTML = \'Unpin\');">Unpin</div>' +
+  '<div class="pin" onclick="hasClass(\'header_fixed\', document.body) ? (removeClass(\'header_fixed\', document.body), this.innerHTML = \'Pin\') : (addClass(\'header_fixed\', document.body), this.innerHTML = \'Unpin\'); onBodyScroll(true);">Unpin</div>' +
   '<div id="page_header">' +
     '<a href="/" class="left_side" onclick="return app.nav(this, event);">' +
       '<div class="icon"></div>' +
@@ -33,11 +33,13 @@ var ui_tpls = {
   '{photos_cnt?{[<div id="photos_counter" class="profile_counter"><a href="{all_photos_link}" class="counter_bg" onclick="return app.nav(this, event);"><span class="label">Photos</span><span>{photos_cnt}</span></a></div>]}}' +
   '{videos_cnt?{[<div class="profile_counter"><a href="/video" class="counter_bg" onclick="return false;"><span class="label">Videos</span><span>{videos_cnt}</span></a></div>]}}' +
   '{audios_cnt?{[<div class="profile_counter"><a href="/audio" class="counter_bg" onclick="return false;"><span class="label">Audio files</span><span>{audios_cnt}</span></a></div>]}}' +
+  '<div id="ff_block">' +
   '{ff_counters_block?{[<hr />]}}' +
   '{friends_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="/friends" class="label" onclick="return false;">Friends</a><span>{friends_cnt}</span></div></div>]}}' +
   '{show_friends?{[<div class="users_tiles clearfix">{friends::UI_USER_TILE}</div>]}}' +
   '{followers_cnt?{[<div class="profile_counter"><div class="counter_bg"><a href="/followers" class="label" onclick="return false;">Followers</a><span>{followers_cnt}</span></div></div>]}}' +
   '{show_followers?{[<div class="users_tiles clearfix">{followers::UI_USER_TILE}</div>]}}' +
+  '</div>' +
 '</div>' +
 '<div id="page_body" class="right_column">' +
   '{profile_page?{[{UI_PROFILE_BODY}]}}' +

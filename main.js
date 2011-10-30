@@ -598,12 +598,12 @@ var app = (function() {
       user.gid && (user.uid = -user.gid);
       if (!usersMap[user.uid]) {
         usersMap[user.uid] = {
-          screen_name: (user.gid ? 'club' + user.gid : 'id' + user.uid)
+          screen_name: (user.gid ? (user.type || 'club') + user.gid : 'id' + user.uid)
         };
       }
       var u = extend(usersMap[user.uid], user);
       extend(u, u.gid ? {} : {name: u.first_name + ' ' + u.last_name});
-      usersMap[u.screen_name] = usersMap[u.gid ? 'club' + u.gid : 'id' + u.uid] = u;
+      usersMap[u.screen_name] = usersMap[u.gid ? (u.type || 'club') + u.gid : 'id' + u.uid] = u;
     }
   }
   function getUser(uid) {
@@ -718,7 +718,7 @@ var app = (function() {
           comments_count = cmnts.shift() || 0,
           comments = [],
           repost = null;
-      if (post.copy_post_id) {
+      if (post.copy_owner_id) {
         var repost_user = getUser(post.copy_owner_id),
             repost_date = repostsDateMap[post.copy_post_id];
         repost = {
@@ -990,7 +990,9 @@ var app = (function() {
   // back2top
   var last_st_position = 0;
   onBodyScroll(function(st) {
-    var back2top = geByClass1('back2top', 'container');
+    var back2top = geByClass1('back2top', 'container'),
+        icon = geByTag1('div', back2top);
+    icon.style.marginTop = hasClass('header_fixed', bodyNode) ? '63px' : Math.max(15, (63 - st)) + 'px';
     if (st < 400) {
       back2top.style.display = last_st_position ? 'block' : 'none';
       back2top.style.opacity = last_st_position ? 1 : 0;

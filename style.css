@@ -684,7 +684,7 @@ button::-moz-focus-inner {
 }
 .post_column .repost .repost_info a.author {
   padding: 0 0 0 12px;
-  background: url(mono_iconset.gif?2) no-repeat 0 -248px;
+  background: url(mono_iconset.gif) no-repeat 0 -248px;
 }
 .repost_info .date {
   color: #999;
